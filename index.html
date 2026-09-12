@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -32,6 +31,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between">
 
+    <!-- Header Publik (Tanpa Tombol Admin) -->
     <header class="bg-gradient-to-r from-indonesia-red via-slate-900 to-indonesia-blue text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
             <div class="flex items-center space-x-3 mb-2 sm:mb-0">
@@ -41,17 +41,20 @@
                     <p class="text-xs text-slate-200">Berdasarkan Kisi-Kisi Resmi TKA (Pancasila, UUD 1945, Bhinneka Tunggal Ika, NKRI)</p>
                 </div>
             </div>
-            <div id="user-badge" class="hidden bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-medium border border-white/20 flex items-center space-x-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                </svg>
-                <span id="display-name" class="font-semibold text-white">Peserta</span>
+            <div class="flex items-center space-x-3">
+                <div id="user-badge" class="hidden bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-medium border border-white/20 flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    <span id="display-name" class="font-semibold text-white">Peserta</span>
+                </div>
             </div>
         </div>
     </header>
 
     <main class="flex-grow max-w-6xl w-full mx-auto p-4 sm:p-6 my-4">
         
+        <!-- Welcome Screen / Form Input Nama -->
         <section id="screen-welcome" class="bg-white rounded-2xl shadow-xl p-6 sm:p-10 border-t-8 border-indonesia-red max-w-2xl mx-auto">
             <div class="text-center mb-6">
                 <span class="bg-indonesia-lightblue text-indonesia-blue font-semibold text-xs px-3 py-1 rounded-full uppercase tracking-wider">Simulasi Ujian</span>
@@ -89,12 +92,12 @@
             </form>
         </section>
 
+        <!-- Quiz Screen -->
         <section id="screen-quiz" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
             
-            <!-- Main Question Container (Left/Center 3 cols) -->
+            <!-- Main Question Container -->
             <div class="lg:col-span-3 bg-white rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col justify-between border-t-8 border-indonesia-blue">
                 <div>
-                    <!-- Top bar info inside question -->
                     <div class="flex flex-wrap justify-between items-center mb-6 border-b pb-4 gap-2">
                         <div>
                             <span id="question-category-tag" class="text-xs font-bold uppercase tracking-wider bg-red-100 text-indonesia-red px-3 py-1 rounded-full">Pancasila</span>
@@ -108,18 +111,15 @@
                         </div>
                     </div>
 
-                    <!-- Question Text -->
                     <div id="question-text" class="text-slate-800 font-medium text-base sm:text-lg mb-6 leading-relaxed">
                         Pertanyaan akan dimuat di sini...
                     </div>
 
-                    <!-- Answer Options Box -->
                     <div id="options-container" class="space-y-3 mb-8">
                         <!-- Dynamically rendered options -->
                     </div>
                 </div>
 
-                <!-- Navigation Bottom Buttons -->
                 <div class="flex justify-between items-center pt-4 border-t">
                     <button onclick="prevQuestion()" id="btn-prev" class="px-5 py-2.5 rounded-xl border border-slate-300 font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center space-x-1 disabled:opacity-40 disabled:cursor-not-allowed">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -137,14 +137,14 @@
                 </div>
             </div>
 
-            <!-- Question Navigation Grid (Right 1 col) -->
+            <!-- Question Navigation Grid -->
             <div class="bg-white rounded-2xl shadow-xl p-5 border-t-8 border-indonesia-red flex flex-col justify-between h-fit">
                 <div>
                     <h3 class="font-extrabold text-slate-800 text-base mb-1">Navigasi Soal</h3>
                     <p class="text-xs text-slate-500 mb-4">Klik nomor untuk pindah soal.</p>
                     
                     <div id="question-grid" class="grid grid-cols-5 gap-2 mb-6 max-h-[300px] overflow-y-auto p-1">
-                        <!-- Dynamically generated navigation grid buttons -->
+                        <!-- Navigation Grid Buttons -->
                     </div>
 
                     <div class="space-y-2 text-xs text-slate-600 border-t pt-4 mb-4">
@@ -173,6 +173,7 @@
 
         </section>
 
+        <!-- Result Screen -->
         <section id="screen-result" class="hidden bg-white rounded-2xl shadow-xl p-6 sm:p-10 border-t-8 border-indonesia-red max-w-4xl mx-auto">
             <div class="text-center mb-8 border-b pb-6">
                 <div class="inline-block bg-indonesia-lightblue text-indonesia-blue font-bold px-4 py-1.5 rounded-full text-sm mb-3">Hasil Evaluasi Tryout TKA PPKN</div>
@@ -209,11 +210,11 @@
             <div class="space-y-6">
                 <h3 class="text-xl font-bold text-slate-800">Pembahasan & Kunci Jawaban</h3>
                 <div id="review-container" class="space-y-6 max-h-[600px] overflow-y-auto pr-2">
-                    <!-- Dynamically populated review cards -->
+                    <!-- Review cards -->
                 </div>
             </div>
 
-            <div class="mt-8 text-center">
+            <div class="mt-8 text-center flex justify-center">
                 <button onclick="location.reload()" class="bg-indonesia-blue text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:bg-blue-800 transition">
                     Ulangi Latihan Soal
                 </button>
@@ -239,7 +240,7 @@
         <p>© 2026 Portal Latihan Soal TKA PPKN Indonesia. Dirancang sesuai kisi-kisi resmi.</p>
     </footer>
 
-    <!-- Firebase imports for student data synchronization -->
+    <!-- Firebase SDK & Sync Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -265,9 +266,6 @@
                         await signInAnonymously(auth);
                     }
                     window.isFirebaseReady = true;
-                    console.log("Firebase connected successfully for student portal.");
-                } else {
-                    console.warn("Firebase config is empty.");
                 }
             } catch (err) {
                 console.error("Firebase init error:", err);
@@ -296,28 +294,18 @@
         };
     </script>
 
+    <!-- Quiz Core Script with Randomized Option Shuffling -->
     <script>
-        // Database 30 Soal TKA PPKN berdasarkan Kisi-Kisi:
         const rawQuestionsData = [
             // PANCASILA (1 - 8)
             {
-                id: 1,
-                category: "Pancasila",
-                type: "mc",
+                id: 1, category: "Pancasila", type: "mc",
                 question: "Sejarah perumusan Pancasila melalui proses sidang BPUPKI dan PPKI yang panjang. Tokoh yang pertama kali mengusulkan rumusan dasar negara pada Sidang Pertama BPUPKI tanggal 1 Juni 1945 adalah...",
-                options: [
-                    "Mr. Moh. Yamin",
-                    "Ir. Soekarno",
-                    "Prof. Dr. Mr. Soepomo",
-                    "Drs. Moh. Hatta",
-                    "Ki Hadjar Dewantara"
-                ],
+                options: ["Mr. Moh. Yamin", "Ir. Soekarno", "Prof. Dr. Mr. Soepomo", "Drs. Moh. Hatta", "Ki Hadjar Dewantara"],
                 correctOption: "Ir. Soekarno"
             },
             {
-                id: 2,
-                category: "Pancasila",
-                type: "complex",
+                id: 2, category: "Pancasila", type: "complex",
                 question: "Pancasila berkedudukan sebagai ideologi nasional dan pandangan hidup bangsa Indonesia. Manakah yang merupakan fungsi utama Pancasila sebagai ideologi terbuka? (Pilih dua jawaban yang benar)",
                 options: [
                     "Memberikan orientasi ke depan dan membimbing bangsa dalam menghadapi tantangan zaman.",
@@ -331,9 +319,7 @@
                 ]
             },
             {
-                id: 3,
-                category: "Pancasila",
-                type: "tf",
+                id: 3, category: "Pancasila", type: "tf",
                 question: "Tentukan kebenaran dari pernyataan berikut mengenai penerapan nilai-nilai sila Pancasila dalam kehidupan sehari-hari:",
                 statements: [
                     "Mengembangkan perbuatan yang luhur yang mencerminkan sikap dan suasana kekeluargaan dan kegotongroyongan merupakan pengamalan sila ke-2.",
@@ -343,23 +329,13 @@
                 answer: [false, true, true]
             },
             {
-                id: 4,
-                category: "Pancasila",
-                type: "mc",
+                id: 4, category: "Pancasila", type: "mc",
                 question: "Kasus pelanggaran Hak Asasi Manusia (HAM) berat di Indonesia ditangani khusus oleh lembaga penegak hukum tertentu berdasarkan Undang-Undang. Lembaga negara yang berwenang melakukan penyelidikan terhadap pelanggaran HAM berat adalah...",
-                options: [
-                    "Mahkamah Konstitusi (MK)",
-                    "Kejaksaan Agung",
-                    "Komisi Nasional Hak Asasi Manusia (Komnas HAM)",
-                    "Kepolisian Negara Republik Indonesia (POLRI)",
-                    "Komisi Pemberantasan Korupsi (KPK)"
-                ],
+                options: ["Mahkamah Konstitusi (MK)", "Kejaksaan Agung", "Komisi Nasional Hak Asasi Manusia (Komnas HAM)", "Kepolisian Negara Republik Indonesia (POLRI)", "Komisi Pemberantasan Korupsi (KPK)"],
                 correctOption: "Komisi Nasional Hak Asasi Manusia (Komnas HAM)"
             },
             {
-                id: 5,
-                category: "Pancasila",
-                type: "complex",
+                id: 5, category: "Pancasila", type: "complex",
                 question: "Dalam pelaksanaan demokrasi Pancasila di Indonesia, terdapat nilai-nilai khas yang membedakannya dengan demokrasi liberal atau sosialis. Manakah karakteristik demokrasi Pancasila yang benar? (Pilih dua jawaban yang benar)",
                 options: [
                     "Dominasi suara mayoritas mutlak mengalahkan perlindungan hak minoritas.",
@@ -373,9 +349,7 @@
                 ]
             },
             {
-                id: 6,
-                category: "Pancasila",
-                type: "tf",
+                id: 6, category: "Pancasila", type: "tf",
                 question: "Analisislah pernyataan berikut terkait pelaksanaan Hak Asasi Manusia (HAM) dan kewajiban di Indonesia:",
                 statements: [
                     "Setiap warga negara memiliki hak yang sama di depan hukum tanpa diskriminasi sesuai prinsip negara hukum.",
@@ -385,53 +359,27 @@
                 answer: [true, false, true]
             },
             {
-                id: 7,
-                category: "Pancasila",
-                type: "mc",
+                id: 7, category: "Pancasila", type: "mc",
                 question: "Identitas nasional bangsa Indonesia mencakup lambang negara Garuda Pancasila, bendera Merah Putih, lagu kebangsaan Indonesia Raya, dan bahasa persatuan bahasa Indonesia. Hal tersebut diatur secara resmi dalam UUD NRI Tahun 1945 pada pasal...",
-                options: [
-                    "Pasal 1 ayat (2) dan (3)",
-                    "Pasal 27 ayat (1) dan (2)",
-                    "Pasal 35 hingga Pasal 36B",
-                    "Pasal 30 ayat (1) dan (2)",
-                    "Pasal 29 ayat (1) dan (2)"
-                ],
+                options: ["Pasal 1 ayat (2) dan (3)", "Pasal 27 ayat (1) dan (2)", "Pasal 35 hingga Pasal 36B", "Pasal 30 ayat (1) dan (2)", "Pasal 29 ayat (1) dan (2)"],
                 correctOption: "Pasal 35 hingga Pasal 36B"
             },
             {
-                id: 8,
-                category: "Pancasila",
-                type: "mc",
+                id: 8, category: "Pancasila", type: "mc",
                 question: "Pancasila sebagai ideologi terbuka mampu beradaptasi dengan perkembangan zaman tanpa kehilangan nilai dasarnya. Tiga tingkat nilai dalam Pancasila meliputi nilai dasar, nilai instrumental, dan nilai praksis. Contoh bentuk nilai instrumental Pancasila adalah...",
-                options: [
-                    "Undang-Undang, Peraturan Pemerintah, dan kebijakan publik",
-                    "Nilai Ketuhanan yang terkandung dalam pembukaan UUD 1945",
-                    "Kebiasaan masyarakat gotong royong di desa",
-                    "Sikap toleransi antarumat beragama di sekolah",
-                    "Keyakinan mendasar bahwa tuhan itu ada"
-                ],
+                options: ["Undang-Undang, Peraturan Pemerintah, dan kebijakan publik", "Nilai Ketuhanan yang terkandung dalam pembukaan UUD 1945", "Kebiasaan masyarakat gotong royong di desa", "Sikap toleransi antarumat beragama di sekolah", "Keyakinan mendasar bahwa tuhan itu ada"],
                 correctOption: "Undang-Undang, Peraturan Pemerintah, dan kebijakan publik"
             },
 
             // UUD NRI TAHUN 1945 (9 - 16)
             {
-                id: 9,
-                category: "UUD 1945",
-                type: "mc",
+                id: 9, category: "UUD 1945", type: "mc",
                 question: "Perilaku taat hukum merupakan cerminan warga negara yang baik. Menurut UUD NRI Tahun 1945 Pasal 27 ayat (1), segala warga negara bersamaan kedudukannya di dalam hukum dan pemerintahan dan wajib menjunjung hukum dan pemerintahan itu...",
-                options: [
-                    "Demi kepentingan kelompok tertentu",
-                    "Dengan syarat tertentu",
-                    "Jika diperintahkan oleh aparat penegak hukum",
-                    "Dengan penuh kesadaran dan tanpa kecuali",
-                    "Berdasarkan adat istiadat setempat"
-                ],
+                options: ["Demi kepentingan kelompok tertentu", "Dengan syarat tertentu", "Jika diperintahkan oleh aparat penegak hukum", "Dengan penuh kesadaran dan tanpa kecuali", "Berdasarkan adat istiadat setempat"],
                 correctOption: "Dengan penuh kesadaran dan tanpa kecuali"
             },
             {
-                id: 10,
-                category: "UUD 1945",
-                type: "complex",
+                id: 10, category: "UUD 1945", type: "complex",
                 question: "Kewenangan lembaga-lembaga negara diatur secara tegas dalam UUD NRI Tahun 1945 setelah amandemen. Manakah yang merupakan kewenangan Mahkamah Konstitusi (MK)? (Pilih dua jawaban)",
                 options: [
                     "Memutus permohonan kasasi atas putusan pengadilan tingkat banding.",
@@ -445,9 +393,7 @@
                 ]
             },
             {
-                id: 11,
-                category: "UUD 1945",
-                type: "tf",
+                id: 11, category: "UUD 1945", type: "tf",
                 question: "Perhatikan pernyataan mengenai hubungan pemerintah pusat dan pemerintah daerah otonom berikut:",
                 statements: [
                     "Pemerintah daerah menjalankan otonomi seluas-luasnya, kecuali urusan pemerintahan yang oleh undang-undang ditentukan sebagai urusan pemerintah pusat.",
@@ -457,23 +403,13 @@
                 answer: [true, true, false]
             },
             {
-                id: 12,
-                category: "UUD 1945",
-                type: "mc",
+                id: 12, category: "UUD 1945", type: "mc",
                 question: "Berdasarkan sejarah dan perkembangannya, UUD NRI Tahun 1945 telah mengalami beberapa kali amandemen oleh MPR antara tahun 1999 hingga 2002. Salah satu tujuan utama amandemen tersebut adalah...",
-                options: [
-                    "Membatasi kekuasaan presiden dan memperkuat sistem check and balances antarlembaga negara",
-                    "Memperkuat kekuasaan presiden secara mutlak",
-                    "Menghapuskan Dewan Perwakilan Rakyat (DPR)",
-                    "Mengubah dasar negara Pancasila menjadi konstitusi liberal",
-                    "Mengembalikan UUD 1945 naskah asli tanpa perubahan"
-                ],
+                options: ["Membatasi kekuasaan presiden dan memperkuat sistem check and balances antarlembaga negara", "Memperkuat kekuasaan presiden secara mutlak", "Menghapuskan Dewan Perwakilan Rakyat (DPR)", "Mengubah dasar negara Pancasila menjadi konstitusi liberal", "Mengembalikan UUD 1945 naskah asli tanpa perubahan"],
                 correctOption: "Membatasi kekuasaan presiden dan memperkuat sistem check and balances antarlembaga negara"
             },
             {
-                id: 13,
-                category: "UUD 1945",
-                type: "complex",
+                id: 13, category: "UUD 1945", type: "complex",
                 question: "Hak dan kewajiban warga negara diatur dalam UUD NRI Tahun 1945. Manakah yang termasuk hak warga negara dalam bidang pendidikan dan kebudayaan? (Pilih dua jawaban)",
                 options: [
                     "Setiap warga negara bebas membentuk partai politik radikal tanpa batas undang-undang.",
@@ -487,9 +423,7 @@
                 ]
             },
             {
-                id: 14,
-                category: "UUD 1945",
-                type: "tf",
+                id: 14, category: "UUD 1945", type: "tf",
                 question: "Tentukan kebenaran pernyataan terkait kedudukan dan wewenang Dewan Perwakilan Rakyat (DPR):",
                 statements: [
                     "DPR memiliki fungsi legislasi, fungsi anggaran, dan fungsi pengawasan.",
@@ -499,53 +433,27 @@
                 answer: [true, true, false]
             },
             {
-                id: 15,
-                category: "UUD 1945",
-                type: "mc",
+                id: 15, category: "UUD 1945", type: "mc",
                 question: "Sistem pemerintahan Indonesia menurut UUD NRI Tahun 1945 adalah sistem presidensial. Ciri utama dari sistem presidensial di Indonesia adalah...",
-                options: [
-                    "Parlemen memegang kekuasaan eksekutif tertinggi di kabinet.",
-                    "Perdana menteri memimpin roda pemerintahan sehari-hari.",
-                    "Presiden bertanggung jawab kepada DPR dan dapat dijatuhkan kapan saja oleh mosi tidak percaya.",
-                    "Presiden adalah kepala negara sekaligus kepala pemerintahan dan menteri-menteri diangkat serta bertanggung jawab kepada Presiden.",
-                    "Presiden tidak memiliki hak prerogatif dalam mengangkat menteri."
-                ],
+                options: ["Parlemen memegang kekuasaan eksekutif tertinggi di kabinet.", "Perdana menteri memimpin roda pemerintahan sehari-hari.", "Presiden bertanggung jawab kepada DPR dan dapat dijatuhkan kapan saja oleh mosi tidak percaya.", "Presiden adalah kepala negara sekaligus kepala pemerintahan dan menteri-menteri diangkat serta bertanggung jawab kepada Presiden.", "Presiden tidak memiliki hak prerogatif dalam mengangkat menteri."],
                 correctOption: "Presiden adalah kepala negara sekaligus kepala pemerintahan dan menteri-menteri diangkat serta bertanggung jawab kepada Presiden."
             },
             {
-                id: 16,
-                category: "UUD 1945",
-                type: "mc",
+                id: 16, category: "UUD 1945", type: "mc",
                 question: "Dalam UUD NRI Tahun 1945 Pasal 1 ayat (2), ditegaskan bahwa kedaulatan berada di tangan rakyat dan dilaksanakan menurut...",
-                options: [
-                    "Ketetapan MPR",
-                    "Undang-Undang Dasar",
-                    "Keputusan Mahkamah Agung",
-                    "Keputusan Presiden",
-                    "Kebijakan Menteri Dalam Negeri"
-                ],
+                options: ["Ketetapan MPR", "Undang-Undang Dasar", "Keputusan Mahkamah Agung", "Keputusan Presiden", "Kebijakan Menteri Dalam Negeri"],
                 correctOption: "Undang-Undang Dasar"
             },
 
             // BHINNEKA TUNGGAL IKA (17 - 23)
             {
-                id: 17,
-                category: "Bhinneka Tunggal Ika",
-                type: "mc",
+                id: 17, category: "Bhinneka Tunggal Ika", type: "mc",
                 question: "Semboyan 'Bhinneka Tunggal Ika' yang berarti berbeda-beda tetapi tetap satu jua berasal dari kitab Sutasoma yang dikarang oleh...",
-                options: [
-                    "Mpu Prapanca",
-                    "Mpu Gandring",
-                    "Mpu Tantular",
-                    "Mpu Kanwa",
-                    "Mpu Sedah"
-                ],
+                options: ["Mpu Prapanca", "Mpu Gandring", "Mpu Tantular", "Mpu Kanwa", "Mpu Sedah"],
                 correctOption: "Mpu Tantular"
             },
             {
-                id: 18,
-                category: "Bhinneka Tunggal Ika",
-                type: "complex",
+                id: 18, category: "Bhinneka Tunggal Ika", type: "complex",
                 question: "Gotong royong merupakan jiwa bangsa Indonesia yang memperkuat persatuan dalam keragaman. Manakah bentuk implementasi prinsip gotong royong yang positif di masyarakat modern? (Pilih dua jawaban)",
                 options: [
                     "Melakukan kerja sama dalam kegiatan ujian sekolah agar semua nilai tuntas.",
@@ -559,9 +467,7 @@
                 ]
             },
             {
-                id: 19,
-                category: "Bhinneka Tunggal Ika",
-                type: "tf",
+                id: 19, category: "Bhinneka Tunggal Ika", type: "tf",
                 question: "Tentukan benar atau salah pernyataan mengenai potensi ancaman terhadap kebhinekaan di Indonesia:",
                 statements: [
                     "Etnnosentrisme adalah sikap yang menganggap suku bangsanya sendiri lebih baik daripada suku bangsa lain.",
@@ -571,23 +477,13 @@
                 answer: [true, true, false]
             },
             {
-                id: 20,
-                category: "Bhinneka Tunggal Ika",
-                type: "mc",
+                id: 20, category: "Bhinneka Tunggal Ika", type: "mc",
                 question: "Kebinekaan sosial budaya di Indonesia merupakan modal sosial yang sangat kuat untuk pembangunan nasional jika dikelola dengan baik. Bentuk modal sosial yang mengikat solidaritas antar-kelompok disebut...",
-                options: [
-                    "Bonding social capital",
-                    "Individual capital",
-                    "Bridging social capital",
-                    "Financial capital",
-                    "Private capital"
-                ],
+                options: ["Bonding social capital", "Individual capital", "Bridging social capital", "Financial capital", "Private capital"],
                 correctOption: "Bridging social capital"
             },
             {
-                id: 21,
-                category: "Bhinneka Tunggal Ika",
-                type: "complex",
+                id: 21, category: "Bhinneka Tunggal Ika", type: "complex",
                 question: "Pancasila dan Bhinneka Tunggal Ika saling merajut persatuan bangsa. Sikap toleransi yang sehat dalam kehidupan beragama di Indonesia ditunjukkan dengan cara: (Pilih dua jawaban)",
                 options: [
                     "Ikut serta secara aktif dalam ritual ibadah agama lain agar tercipta kerukunan total.",
@@ -601,9 +497,7 @@
                 ]
             },
             {
-                id: 22,
-                category: "Bhinneka Tunggal Ika",
-                type: "tf",
+                id: 22, category: "Bhinneka Tunggal Ika", type: "tf",
                 question: "Perhatikan pernyataan berikut tentang wawasan kebangsaan dan Bhinneka Tunggal Ika:",
                 statements: [
                     "Keberagaman suku, ras, agama, dan antargolongan (SARA) di Indonesia harus dipandang sebagai kekayaan bangsa, bukan sumber perpecahan.",
@@ -613,39 +507,21 @@
                 answer: [true, true, false]
             },
             {
-                id: 23,
-                category: "Bhinneka Tunggal Ika",
-                type: "mc",
+                id: 23, category: "Bhinneka Tunggal Ika", type: "mc",
                 question: "Dalam menghadapi ancaman disintegrasi bangsa yang bersumber dari perbedaan suku dan ras, langkah preventif paling efektif yang dapat dilakukan oleh generasi muda adalah...",
-                options: [
-                    "Memisahkan diri dalam kelompok pergaulan yang sejenis saja.",
-                    "Mengembangkan sikap toleransi, empati sosial, dan semangat nasionalisme.",
-                    "Mengabaikan kebudayaan daerah lain karena dianggap tidak penting.",
-                    "Menutup diri dari arus informasi global.",
-                    "Menumbuhkan sikap superioritas atas kelompok lain."
-                ],
+                options: ["Memisahkan diri dalam kelompok pergaulan yang sejenis saja.", "Mengembangkan sikap toleransi, empati sosial, dan semangat nasionalisme.", "Mengabaikan kebudayaan daerah lain karena dianggap tidak penting.", "Menutup diri dari arus informasi global.", "Menumbuhkan sikap superioritas atas kelompok lain."],
                 correctOption: "Mengembangkan sikap toleransi, empati sosial, dan semangat nasionalisme."
             },
 
             // NEGARA KESATUAN REPUBLIK INDONESIA / NKRI (24 - 30)
             {
-                id: 24,
-                category: "Negara Kesatuan Republik Indonesia",
-                type: "mc",
+                id: 24, category: "Negara Kesatuan Republik Indonesia", type: "mc",
                 question: "Bentuk negara Indonesia adalah negara kesatuan, dan bentuk pemerintahan adalah republik. Hal ini secara tegas dinyatakan dalam UUD NRI Tahun 1945 Pasal...",
-                options: [
-                    "Pasal 2 ayat (1)",
-                    "Pasal 3 ayat (1)",
-                    "Pasal 1 ayat (1)",
-                    "Pasal 4 ayat (1)",
-                    "Pasal 5 ayat (1)"
-                ],
+                options: ["Pasal 2 ayat (1)", "Pasal 3 ayat (1)", "Pasal 1 ayat (1)", "Pasal 4 ayat (1)", "Pasal 5 ayat (1)"],
                 correctOption: "Pasal 1 ayat (1)"
             },
             {
-                id: 25,
-                category: "Negara Kesatuan Republik Indonesia",
-                type: "complex",
+                id: 25, category: "Negara Kesatuan Republik Indonesia", type: "complex",
                 question: "Peran Indonesia dalam perdamaian dunia diwujudkan secara aktif melalui politik luar negeri bebas aktif. Manakah bentuk nyata dari peranan tersebut? (Pilih dua jawaban)",
                 options: [
                     "Bergabung dalam pakta pertahanan militer global untuk menyerang negara tetangga.",
@@ -659,9 +535,7 @@
                 ]
             },
             {
-                id: 26,
-                category: "Negara Kesatuan Republik Indonesia",
-                type: "tf",
+                id: 26, category: "Negara Kesatuan Republik Indonesia", type: "tf",
                 question: "Analisislah pernyataan terkait sistem pertahanan dan keamanan negara (Sishankamrata):",
                 statements: [
                     "Sistem pertahanan dan keamanan negara bersifat semesta yang melibatkan seluruh warga negara, wilayah, dan sumber daya nasional.",
@@ -671,23 +545,13 @@
                 answer: [true, true, false]
             },
             {
-                id: 27,
-                category: "Negara Kesatuan Republik Indonesia",
-                type: "mc",
+                id: 27, category: "Negara Kesatuan Republik Indonesia", type: "mc",
                 question: "Menjaga keutuhan Negara Kesatuan Republik Indonesia (NKRI) merupakan kewajiban setiap warga negara. Ancaman militer terhadap kedaulatan negara contohnya adalah...",
-                options: [
-                    "Inflasi tinggi dan krisis moneter global.",
-                    "Agresi militer, spionase, sabotase, dan aksi terorisme bersenjata.",
-                    "Penyalahgunaan narkoba di kalangan remaja.",
-                    "Penyebaran berita hoaks di media sosial.",
-                    "Pencemaran lingkungan hidup oleh limbah pabrik."
-                ],
+                options: ["Inflasi tinggi dan krisis moneter global.", "Agresi militer, spionase, sabotase, dan aksi terorisme bersenjata.", "Penyalahgunaan narkoba di kalangan remaja.", "Penyebaran berita hoaks di media sosial.", "Pencemaran lingkungan hidup oleh limbah pabrik."],
                 correctOption: "Agresi militer, spionase, sabotase, dan aksi terorisme bersenjata."
             },
             {
-                id: 28,
-                category: "Negara Kesatuan Republik Indonesia",
-                type: "complex",
+                id: 28, category: "Negara Kesatuan Republik Indonesia", type: "complex",
                 question: "Praktik demokrasi di Indonesia mengalami dinamika dari masa kemerdekaan, masa Orde Lama, Orde Baru, hingga Reformasi. Manakah ciri utama pelaksanaan demokrasi pada masa Reformasi (1998-sekarang)? (Pilih dua jawaban)",
                 options: [
                     "Pemusatan kekuasaan mutlak berada di tangan eksekutif presiden.",
@@ -701,9 +565,7 @@
                 ]
             },
             {
-                id: 29,
-                category: "Negara Kesatuan Republik Indonesia",
-                type: "tf",
+                id: 29, category: "Negara Kesatuan Republik Indonesia", type: "tf",
                 question: "Tentukan kebenaran pernyataan mengenai wawasan nusantara sebagai geopolitik Indonesia:",
                 statements: [
                     "Wawasan nusantara adalah cara pandang bangsa Indonesia terhadap diri dan lingkungannya sebagai satu kesatuan politik, ekonomi, sosial budaya, dan pertahanan keamanan.",
@@ -713,38 +575,26 @@
                 answer: [true, true, false]
             },
             {
-                id: 30,
-                category: "Negara Kesatuan Republik Indonesia",
-                type: "mc",
+                id: 30, category: "Negara Kesatuan Republik Indonesia", type: "mc",
                 question: "Sebagai warga negara yang baik dalam menjaga keutuhan NKRI, sikap yang harus dihindari agar tidak merusak persatuan dan kesatuan bangsa adalah...",
-                options: [
-                    "Semangat toleransi dan gotong royong yang tinggi.",
-                    "Cinta tanah air dan rela berkorban untuk bangsa.",
-                    "Chauvinisme dan fanatisme sempit yang merendahkan pihak lain.",
-                    "Mematuhi peraturan perundang-undangan yang berlaku.",
-                    "Menghargai hasil karya orang lain."
-                ],
+                options: ["Semangat toleransi dan gotong royong yang tinggi.", "Cinta tanah air dan rela berkorban untuk bangsa.", "Chauvinisme dan fanatisme sempit yang merendahkan pihak lain.", "Mematuhi peraturan perundang-undangan yang berlaku.", "Menghargai hasil karya orang lain."],
                 correctOption: "Chauvinisme dan fanatisme sempit yang merendahkan pihak lain."
             }
         ];
 
         let questionsData = [];
 
-        // Fungsi mengacak array pilihan jawaban secara acak per sesi/refresh
         function prepareQuestions() {
             questionsData = rawQuestionsData.map((q) => {
                 let copiedQ = { ...q };
                 if (copiedQ.type === 'mc') {
-                    // Simpan jawaban benar string asli
                     let correctText = copiedQ.correctOption;
-                    // Acak array options
                     let shuffledOpts = [...copiedQ.options];
                     for (let i = shuffledOpts.length - 1; i > 0; i--) {
                         let j = Math.floor(Math.random() * (i + 1));
                         [shuffledOpts[i], shuffledOpts[j]] = [shuffledOpts[j], shuffledOpts[i]];
                     }
                     copiedQ.options = shuffledOpts;
-                    // Tentukan index numerik jawaban benar setelah diacak
                     copiedQ.answer = shuffledOpts.indexOf(correctText);
                 } else if (copiedQ.type === 'complex') {
                     let correctArrTexts = [...copiedQ.correctAnswers];
@@ -754,7 +604,6 @@
                         [shuffledOpts[i], shuffledOpts[j]] = [shuffledOpts[j], shuffledOpts[i]];
                     }
                     copiedQ.options = shuffledOpts;
-                    // Cari indeks baru dari jawaban-jawaban benar tersebut
                     let newCorrectIndices = [];
                     correctArrTexts.forEach(txt => {
                         let idx = shuffledOpts.indexOf(txt);
@@ -766,11 +615,10 @@
             });
         }
 
-        // State Aplikasi
         let currentUser = "";
         let currentQuestionIndex = 0;
         let userAnswers = [];
-        let examTimer = 3600; // 1 jam dalam detik
+        let examTimer = 3600;
         let timerInterval = null;
 
         function startExam(e) {
@@ -782,7 +630,7 @@
             document.getElementById('display-name').textContent = currentUser;
             document.getElementById('user-badge').classList.remove('hidden');
 
-            prepareQuestions(); // Acak urutan opsi jawaban saat ujian dimulai
+            prepareQuestions();
             userAnswers = new Array(questionsData.length).fill(null);
 
             document.getElementById('screen-welcome').classList.add('hidden');
@@ -1203,4 +1051,3 @@
     </script>
 </body>
 </html>
-```
