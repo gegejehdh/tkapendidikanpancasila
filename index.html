@@ -239,7 +239,7 @@
         <p>© 2026 Portal Latihan Soal TKA PPKN Indonesia. Dirancang sesuai kisi-kisi resmi.</p>
     </footer>
 
-    <!-- Firebase SDK & Sync Script with Multi-Storage Fallback -->
+    <!-- Firebase SDK & Multi-Storage Sync Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -272,17 +272,20 @@
         };
 
         window.saveExamResultToCloud = async function(resultData) {
-            // Backup ke localStorage agar admin selalu dapat membaca meski offline/sandbox terisolasi
+            // Simpan ke localStorage dengan kunci universal agar admin dapat membaca
             try {
-                const localList = JSON.parse(localStorage.getItem('tka_exam_results_sync') || '[]');
+                const STORAGE_KEY = 'tka_ppkn_all_exam_results';
+                const localList = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
                 localList.push(resultData);
-                localStorage.setItem('tka_exam_results_sync', JSON.stringify(localList));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(localList));
+                // Trigger storage event manual untuk tab lain jika terbuka
+                window.dispatchEvent(new Event('storage'));
             } catch (e) {
                 console.error("Local sync error:", e);
             }
 
             if (!window.isFirebaseReady || !db) {
-                document.getElementById('sync-status').textContent = '✔ Nilai tersimpan di server lokal admin.';
+                document.getElementById('sync-status').textContent = '✔ Nilai tersimpan di sistem admin lokal.';
                 return;
             }
             try {
@@ -293,7 +296,7 @@
                     correctCount: resultData.correctCount,
                     timestamp: resultData.timestamp
                 });
-                document.getElementById('sync-status').textContent = '✔ Nilai sukses terkirim ke Cloud Admin!';
+                document.getElementById('sync-status').textContent = '✔ Nilai sukses terkirim ke Cloud & Admin!';
             } catch (err) {
                 console.warn("Cloud sync warning:", err);
                 document.getElementById('sync-status').textContent = '✔ Nilai tersimpan di penyimpanan lokal admin.';
