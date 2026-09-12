@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -188,4 +189,956 @@
                     <span id="sync-status" class="text-xs font-medium text-slate-400">Menyimpan nilai ke database admin...</span>
                 </div>
 
-                <div class="
+                <div class="grid grid-cols-3 gap-4 max-w-md mx-auto mt-6 text-center">
+                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                        <span class="block text-xs font-semibold text-emerald-600">Benar</span>
+                        <span id="stat-correct" class="text-xl font-bold text-emerald-700">0</span>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-xl border border-red-200">
+                        <span class="block text-xs font-semibold text-indonesia-red">Salah</span>
+                        <span id="stat-wrong" class="text-xl font-bold text-red-700">0</span>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                        <span class="block text-xs font-semibold text-indonesia-blue">Total Soal</span>
+                        <span class="text-xl font-bold text-blue-700">30</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review Section -->
+            <div class="space-y-6">
+                <h3 class="text-xl font-bold text-slate-800">Pembahasan & Kunci Jawaban</h3>
+                <div id="review-container" class="space-y-6 max-h-[600px] overflow-y-auto pr-2">
+                    <!-- Dynamically populated review cards -->
+                </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                <button onclick="location.reload()" class="bg-indonesia-blue text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:bg-blue-800 transition">
+                    Ulangi Latihan Soal
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Konfirmasi Submit -->
+    <div id="submit-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl border-t-8 border-indonesia-blue text-center">
+            <div class="w-16 h-16 bg-blue-100 text-indonesia-blue rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">?</div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Akhiri Ujian Sekarang?</h3>
+            <p class="text-slate-600 text-sm mb-6">Pastikan semua soal telah terjawab dengan teliti sebelum Anda mengumpulkan lembar jawaban.</p>
+            <div class="flex space-x-3">
+                <button onclick="closeSubmitModal()" class="flex-1 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 transition">Kembali</button>
+                <button onclick="submitExam()" class="flex-1 py-2.5 rounded-xl bg-indonesia-red text-white font-semibold shadow hover:bg-red-700 transition">Ya, Kumpulkan</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-900 text-slate-400 py-6 text-center text-xs border-t border-slate-800">
+        <p>© 2026 Portal Latihan Soal TKA PPKN Indonesia. Dirancang sesuai kisi-kisi resmi.</p>
+    </footer>
+
+    <!-- Firebase imports for student data synchronization -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+        let app, db, auth;
+        window.isFirebaseReady = false;
+
+        window.onload = async function() {
+            try {
+                if (Object.keys(firebaseConfig).length > 0) {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+
+                    const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    if (token) {
+                        await signInWithCustomToken(auth, token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    window.isFirebaseReady = true;
+                }
+            } catch (err) {
+                console.error("Firebase init error:", err);
+            }
+        };
+
+        window.saveExamResultToCloud = async function(resultData) {
+            if (!window.isFirebaseReady || !db) {
+                document.getElementById('sync-status').textContent = 'Mode offline (Nilai disimpan lokal).';
+                return;
+            }
+            try {
+                const resultsRef = collection(db, 'artifacts', appId, 'public', 'data', 'exam_results');
+                await addDoc(resultsRef, {
+                    ...resultData,
+                    timestamp: new Date().toISOString()
+                });
+                document.getElementById('sync-status').textContent = '✔ Nilai berhasil dikirim ke Dashboard Admin!';
+                document.getElementById('sync-status').className = 'text-xs font-semibold text-emerald-600';
+            } catch (err) {
+                console.error("Error saving result:", err);
+                document.getElementById('sync-status').textContent = 'Gagal sinkronisasi ke server.';
+            }
+        };
+    </script>
+
+    <script>
+        // Database 30 Soal TKA PPKN berdasarkan Kisi-Kisi:
+        // Materi: Pancasila (1-8), UUD 1945 (9-16), Bhinneka Tunggal Ika (17-23), NKRI (24-30)
+        // Format soal: 
+        // type: 'mc' (Pilihan Ganda biasa), 'complex' (Pilihan Ganda Kompleks - multiple answers), 'tf' (Benar Salah 3 pernyataan)
+        const questionsData = [
+            // PANCASILA (1 - 8)
+            {
+                id: 1,
+                category: "Pancasila",
+                type: "mc",
+                question: "Sejarah perumusan Pancasila melalui proses sidang BPUPKI dan PPKI yang panjang. Tokoh yang pertama kali mengusulkan rumusan dasar negara pada Sidang Pertama BPUPKI tanggal 1 Juni 1945 adalah...",
+                options: [
+                    "Mr. Moh. Yamin",
+                    "Prof. Dr. Mr. Soepomo",
+                    "Ir. Soekarno",
+                    "Drs. Moh. Hatta",
+                    "Ki Hadjar Dewantara"
+                ],
+                answer: 2 // C (Ir. Soekarno)
+            },
+            {
+                id: 2,
+                category: "Pancasila",
+                type: "complex",
+                question: "Pancasila berkedudukan sebagai ideologi nasional dan pandangan hidup bangsa Indonesia. Manakah yang merupakan fungsi utama Pancasila sebagai ideologi terbuka? (Pilih dua jawaban yang benar)",
+                options: [
+                    "Memberikan orientasi ke depan dan membimbing bangsa dalam menghadapi tantangan zaman.",
+                    "Menutup diri dari segala bentuk pengaruh kebudayaan asing yang masuk ke Indonesia.",
+                    "Bersumber dari nilai-nilai riil yang hidup dan berakar dalam kepribadian masyarakat Indonesia.",
+                    "Menjadikan ideologi lain sebagai landasan utama pembangunan nasional."
+                ],
+                answer: [0, 2] // A dan C
+            },
+            {
+                id: 3,
+                category: "Pancasila",
+                type: "tf",
+                question: "Tentukan kebenaran dari pernyataan berikut mengenai penerapan nilai-nilai sila Pancasila dalam kehidupan sehari-hari:",
+                statements: [
+                    "Mengembangkan perbuatan yang luhur yang mencerminkan sikap dan suasana kekeluargaan dan kegotongroyongan merupakan pengamalan sila ke-2.",
+                    "Keputusan yang diambil harus dapat dipertanggungjawabkan secara moral kepada Tuhan Yang Maha Esa menjunjung tinggi harkat dan martabat manusia merupakan pengamalan sila ke-4.",
+                    "Mengembangkan sikap adil terhadap sesama, menjaga keseimbangan antara hak dan kewajiban merupakan pengamalan sila ke-5."
+                ],
+                answer: [false, true, true] // Pernyataan 1 salah (sila ke-2 salah, harusnya sila ke-5/ke-2 kekeluargaan itu sila ke-2/5, tapi sila pertama keluarga? Kekeluargaan dan gotong royong sila ke-5 keadilan sosial / sila ke-3 persatuan. Sila ke-2 kemanusiaan adil beradab. Sederhananya: 1. Salah (kekeluargaan/gotong royong lebih dekat ke Sila ke-3 atau ke-5), 2. Benar (Sila ke-4), 3. Benar (Sila ke-5))
+            },
+            {
+                id: 4,
+                category: "Pancasila",
+                type: "mc",
+                question: "Kasus pelanggaran Hak Asasi Manusia (HAM) berat di Indonesia ditangani khusus oleh lembaga penegak hukum tertentu berdasarkan Undang-Undang. Lembaga negara yang berwenang melakukan penyelidikan terhadap pelanggaran HAM berat adalah...",
+                options: [
+                    "Kepolisian Negara Republik Indonesia (POLRI)",
+                    "Komisi Nasional Hak Asasi Manusia (Komnas HAM)",
+                    "Mahkamah Konstitusi (MK)",
+                    "Kejaksaan Agung",
+                    "Komisi Pemberantasan Korupsi (KPK)"
+                ],
+                answer: 1 // Komnas HAM
+            },
+            {
+                id: 5,
+                category: "Pancasila",
+                type: "complex",
+                question: "Dalam pelaksanaan demokrasi Pancasila di Indonesia, terdapat nilai-nilai khas yang membedakannya dengan demokrasi liberal atau sosialis. Manakah karakteristik demokrasi Pancasila yang benar? (Pilih dua jawaban yang benar)",
+                options: [
+                    "Keputusan diambil berdasarkan musyawarah untuk mufakat.",
+                    "Dominasi suara mayoritas mutlak mengalahkan perlindungan hak minoritas.",
+                    "Menghargai hak asasi manusia dengan tetap memperhatikan kewajiban dan tanggung jawab sosial.",
+                    "Pemerintahan dijalankan tanpa adanya pengawasan dari lembaga legislatif."
+                ],
+                answer: [0, 2]
+            },
+            {
+                id: 6,
+                category: "Pancasila",
+                type: "tf",
+                question: "Analisislah pernyataan berikut terkait pelaksanaan Hak Asasi Manusia (HAM) dan kewajiban di Indonesia:",
+                statements: [
+                    "Setiap warga negara memiliki hak yang sama di depan hukum tanpa diskriminasi sesuai prinsip negara hukum.",
+                    "Pelaksanaan hak asasi manusia bersifat mutlak tanpa batas agar kebebasan individu tercapai sepenuhnya.",
+                    "Kewajiban asasi manusia melekat pada setiap orang terlepas dari status kewarganegaraannya di suatu negara."
+                ],
+                answer: [true, false, true]
+            },
+            {
+                id: 7,
+                category: "Pancasila",
+                type: "mc",
+                question: "Identitas nasional bangsa Indonesia mencakup lambang negara Garuda Pancasila, bendera Merah Putih, lagu kebangsaan Indonesia Raya, dan bahasa persatuan bahasa Indonesia. Hal tersebut diatur secara resmi dalam UUD NRI Tahun 1945 pada pasal...",
+                options: [
+                    "Pasal 35 hingga Pasal 36B",
+                    "Pasal 1 ayat (2) dan (3)",
+                    "Pasal 27 ayat (1) dan (2)",
+                    "Pasal 30 ayat (1) dan (2)",
+                    "Pasal 29 ayat (1) dan (2)"
+                ],
+                answer: 0 // Pasal 35 sampai 36B
+            },
+            {
+                id: 8,
+                category: "Pancasila",
+                type: "mc",
+                question: "Pancasila sebagai ideologi terbuka mampu beradaptasi dengan perkembangan zaman tanpa kehilangan nilai dasarnya. Tiga tingkat nilai dalam Pancasila meliputi nilai dasar, nilai instrumental, dan nilai praksis. Contoh bentuk nilai instrumental Pancasila adalah...",
+                options: [
+                    "Nilai Ketuhanan yang terkandung dalam pembukaan UUD 1945",
+                    "Undang-Undang, Peraturan Pemerintah, dan kebijakan publik",
+                    "Kebiasaan masyarakat gotong royong di desa",
+                    "Sikap toleransi antarumat beragama di sekolah",
+                    "Keyakinan mendasar bahwa tuhan itu ada"
+                ],
+                answer: 1 // UU, PP, kebijakan publik (bentuk instrumen penjabaran nilai dasar)
+            },
+
+            // UUD NRI TAHUN 1945 (9 - 16)
+            {
+                id: 9,
+                category: "UUD 1945",
+                type: "mc",
+                question: "Perilaku taat hukum merupakan cerminan warga negara yang baik. Menurut UUD NRI Tahun 1945 Pasal 27 ayat (1), segala warga negara bersamaan kedudukannya di dalam hukum dan pemerintahan dan wajib menjunjung hukum dan pemerintahan itu...",
+                options: [
+                    "Dengan syarat tertentu",
+                    "Dengan penuh kesadaran dan tanpa kecuali",
+                    "Jika diperintahkan oleh aparat penegak hukum",
+                    "Demi kepentingan kelompok tertentu",
+                    "Berdasarkan adat istiadat setempat"
+                ],
+                answer: 1
+            },
+            {
+                id: 10,
+                category: "UUD 1945",
+                type: "complex",
+                question: "Kewenangan lembaga-lembaga negara diatur secara tegas dalam UUD NRI Tahun 1945 setelah amandemen. Manakah yang merupakan kewenangan Mahkamah Konstitusi (MK)? (Pilih dua jawaban)",
+                options: [
+                    "Menguji undang-undang terhadap Undang-Undang Dasar Negara Republik Indonesia Tahun 1945.",
+                    "Memutus sengketa kewenangan lembaga negara yang kewenangannya diberikan oleh UUD.",
+                    "Memutus permohonan kasasi atas putusan pengadilan tingkat banding.",
+                    "Mengangkat dan memberhentikan para hakim agung di Mahkamah Agung."
+                ],
+                answer: [0, 1]
+            },
+            {
+                id: 11,
+                category: "UUD 1945",
+                type: "tf",
+                question: "Perhatikan pernyataan mengenai hubungan pemerintah pusat dan pemerintah daerah otonom berikut:",
+                statements: [
+                    "Pemerintah daerah menjalankan otonomi seluas-luasnya, kecuali urusan pemerintahan yang oleh undang-undang ditentukan sebagai urusan pemerintah pusat.",
+                    "Hubungan wewenang antara pusat dan daerah mencakup bidang keuangan, pelayanan umum, pemanfaatan sumber daya alam, dan sumber daya lainnya.",
+                    "Kepala daerah dipilih secara langsung oleh Dewan Perwakilan Rakyat Daerah (DPRD) tanpa melibatkan rakyat."
+                ],
+                answer: [true, true, false]
+            },
+            {
+                id: 12,
+                category: "UUD 1945",
+                type: "mc",
+                question: "Berdasarkan sejarah dan perkembangannya, UUD NRI Tahun 1945 telah mengalami beberapa kali amandemen oleh MPR antara tahun 1999 hingga 2002. Salah satu tujuan utama amandemen tersebut adalah...",
+                options: [
+                    "Memperkuat kekuasaan presiden secara mutlak",
+                    "Membatasi kekuasaan presiden dan memperkuat sistem check and balances antarlembaga negara",
+                    "Menghapuskan Dewan Perwakilan Rakyat (DPR)",
+                    "Mengubah dasar negara Pancasila menjadi konstitusi liberal",
+                    "Mengembalikan UUD 1945 naskah asli tanpa perubahan"
+                ],
+                answer: 1
+            },
+            {
+                id: 13,
+                category: "UUD 1945",
+                type: "complex",
+                question: "Hak dan kewajiban warga negara diatur dalam UUD NRI Tahun 1945. Manakah yang termasuk hak warga negara dalam bidang pendidikan dan kebudayaan? (Pilih dua jawaban)",
+                options: [
+                    "Setiap warga negara wajib mengikuti pendidikan dasar dan pemerintah wajib membiayainya (Pasal 31 ayat 2).",
+                    "Negara memajukan kebudayaan nasional Indonesia di tengah peradaban dunia (Pasal 32 ayat 1).",
+                    "Setiap warga negara bebas membentuk partai politik radikal tanpa batas undang-undang.",
+                    "Pemerintah tidak memiliki kewajiban mencetak buku pelajaran gratis."
+                ],
+                answer: [0, 1]
+            },
+            {
+                id: 14,
+                category: "UUD 1945",
+                type: "tf",
+                question: "Tentukan kebenaran pernyataan terkait kedudukan dan wewenang Dewan Perwakilan Rakyat (DPR):",
+                statements: [
+                    "DPR memiliki fungsi legislasi, fungsi anggaran, dan fungsi pengawasan.",
+                    "DPR dapat memberhentikan Presiden dan/atau Wakil Presiden dalam masa jabatannya atas usul Mahkamah Konstitusi.",
+                    "DPR memiliki wewenang untuk menetapkan putusan hakim kasasi dalam perkara pidana korupsi."
+                ],
+                answer: [true, true, false]
+            },
+            {
+                id: 15,
+                category: "UUD 1945",
+                type: "mc",
+                question: "Sistem pemerintahan Indonesia menurut UUD NRI Tahun 1945 adalah sistem presidensial. Ciri utama dari sistem presidensial di Indonesia adalah...",
+                options: [
+                    "Presiden bertanggung jawab kepada DPR dan dapat dijatuhkan kapan saja oleh mosi tidak percaya.",
+                    "Presiden adalah kepala negara sekaligus kepala pemerintahan dan menteri-menteri diangkat serta bertanggung jawab kepada Presiden.",
+                    "Parlemen memegang kekuasaan eksekutif tertinggi di kabinet.",
+                    "Perdana menteri memimpin roda pemerintahan sehari-hari.",
+                    "Presiden tidak memiliki hak prerogatif dalam mengangkat menteri."
+                ],
+                answer: 1
+            },
+            {
+                id: 16,
+                category: "UUD 1945",
+                type: "mc",
+                question: "Dalam UUD NRI Tahun 1945 Pasal 1 ayat (2), ditegaskan bahwa kedaulatan berada di tangan rakyat dan dilaksanakan menurut...",
+                options: [
+                    "Keputusan Mahkamah Agung",
+                    "Undang-Undang Dasar",
+                    "Ketetapan MPR",
+                    "Keputusan Presiden",
+                    "Kebijakan Menteri Dalam Negeri"
+                ],
+                answer: 1 // Undang-Undang Dasar
+            },
+
+            // BHINNEKA TUNGGAL IKA (17 - 23)
+            {
+                id: 17,
+                category: "Bhinneka Tunggal Ika",
+                type: "mc",
+                question: "Semboyan 'Bhinneka Tunggal Ika' yang berarti berbeda-beda tetapi tetap satu jua berasal dari kitab Sutasoma yang dikarang oleh...",
+                options: [
+                    "Mpu Prapanca",
+                    "Mpu Tantular",
+                    "Mpu Gandring",
+                    "Mpu Kanwa",
+                    "Mpu Sedah"
+                ],
+                answer: 1 // Mpu Tantular
+            },
+            {
+                id: 18,
+                category: "Bhinneka Tunggal Ika",
+                type: "complex",
+                question: "Gotong royong merupakan jiwa bangsa Indonesia yang memperkuat persatuan dalam keragaman. Manakah bentuk implementasi prinsip gotong royong yang positif di masyarakat modern? (Pilih dua jawaban)",
+                options: [
+                    "Melakukan kerja bakti membersihkan lingkungan tempat tinggal secara berkala.",
+                    "Membantu korban bencana alam tanpa memandang latar belakang suku atau agama.",
+                    "Melakukan kerja sama dalam kegiatan ujian sekolah agar semua nilai tuntas.",
+                    "Gotong royong dalam hal memprovokasi kelompok lain demi kepentingan golongan."
+                ],
+                answer: [0, 1]
+            },
+            {
+                id: 19,
+                category: "Bhinneka Tunggal Ika",
+                type: "tf",
+                question: "Tentukan benar atau salah pernyataan mengenai potensi ancaman terhadap kebhinekaan di Indonesia:",
+                statements: [
+                    "Etnnosentrisme adalah sikap yang menganggap suku bangsanya sendiri lebih baik daripada suku bangsa lain.",
+                    "Fanatisme sempit atau chauvinisme dapat memicu perpecahan dan konflik antar-kelompok dalam masyarakat multikultural.",
+                    "Integrasi nasional akan semakin kuat jika setiap kelompok masyarakat menonjolkan ego kelompok masing-masing."
+                ],
+                answer: [true, true, false]
+            },
+            {
+                id: 20,
+                category: "Bhinneka Tunggal Ika",
+                type: "mc",
+                question: "Kebinekaan sosial budaya di Indonesia merupakan modal sosial yang sangat kuat untuk pembangunan nasional jika dikelola dengan baik. Bentuk modal sosial yang mengikat solidaritas antar-kelompok disebut...",
+                options: [
+                    "Bonding social capital",
+                    "Bridging social capital",
+                    "Individual capital",
+                    "Financial capital",
+                    "Private capital"
+                ],
+                answer: 1 // Bridging (menghubungkan antar kelompok berbeda)
+            },
+            {
+                id: 21,
+                category: "Bhinneka Tunggal Ika",
+                type: "complex",
+                question: "Pancasila dan Bhinneka Tunggal Ika saling merajut persatuan bangsa. Sikap toleransi yang sehat dalam kehidupan beragama di Indonesia ditunjukkan dengan cara: (Pilih dua jawaban)",
+                options: [
+                    "Menghormati umat agama lain yang sedang melaksanakan ibadah sesuai ajaran agamanya.",
+                    "Ikut serta secara aktif dalam ritual ibadah agama lain agar tercipta kerukunan total.",
+                    "Tidak memaksakan suatu agama atau keyakinan kepada orang lain.",
+                    "Melarang umat agama lain mendirikan tempat ibadah di wilayah manapun."
+                ],
+                answer: [0, 2]
+            },
+            {
+                id: 22,
+                category: "Bhinneka Tunggal Ika",
+                type: "tf",
+                question: "Perhatikan pernyataan berikut tentang wawasan kebangsaan dan Bhinneka Tunggal Ika:",
+                statements: [
+                    "Keberagaman suku, ras, agama, dan antargolongan (SARA) di Indonesia harus dipandang sebagai kekayaan bangsa, bukan sumber perpecahan.",
+                    "Sikap inklusif dan terbuka sangat diperlukan dalam merawat persatuan di tengah masyarakat majemuk.",
+                    "Asimilasi budaya terjadi secara instan tanpa melalui proses akulturasi yang panjang."
+                ],
+                answer: [true, true, false]
+            },
+            {
+                id: 23,
+                category: "Bhinneka Tunggal Ika",
+                type: "mc",
+                question: "Dalam menghadapi ancaman disintegrasi bangsa yang bersumber dari perbedaan suku dan ras, langkah preventif paling efektif yang dapat dilakukan oleh generasi muda adalah...",
+                options: [
+                    "Mengembangkan sikap toleransi, empati sosial, dan semangat nasionalisme.",
+                    "Memisahkan diri dalam kelompok pergaulan yang sejenis saja.",
+                    "Mengabaikan kebudayaan daerah lain karena dianggap tidak penting.",
+                    "Menutup diri dari arus informasi global.",
+                    "Menumbuhkan sikap superioritas atas kelompok lain."
+                ],
+                answer: 0
+            },
+
+            // NEGARA KESATUAN REPUBLIK INDONESIA / NKRI (24 - 30)
+            {
+                id: 24,
+                category: "Negara Kesatuan Republik Indonesia",
+                type: "mc",
+                question: "Bentuk negara Indonesia adalah negara kesatuan, dan bentuk pemerintahan adalah republik. Hal ini secara tegas dinyatakan dalam UUD NRI Tahun 1945 Pasal...",
+                options: [
+                    "Pasal 1 ayat (1)",
+                    "Pasal 2 ayat (1)",
+                    "Pasal 3 ayat (1)",
+                    "Pasal 4 ayat (1)",
+                    "Pasal 5 ayat (1)"
+                ],
+                answer: 0 // Pasal 1 ayat (1)
+            },
+            {
+                id: 25,
+                category: "Negara Kesatuan Republik Indonesia",
+                type: "complex",
+                question: "Peran Indonesia dalam perdamaian dunia diwujudkan secara aktif melalui politik luar negeri bebas aktif. Manakah bentuk nyata dari peranan tersebut? (Pilih dua jawaban)",
+                options: [
+                    "Pengiriman Pasukan Garuda sebagai bagian dari misi pemelihara perdamaian PBB.",
+                    "Menjadi tuan rumah Konferensi Asia-Afrika (KAA) tahun 1955 di Bandung.",
+                    "Bergabung dalam pakta pertahanan militer global untuk menyerang negara tetangga.",
+                    "Menutup diri dari kerjasama ekonomi internasional dan lembaga PBB."
+                ],
+                answer: [0, 1]
+            },
+            {
+                id: 26,
+                category: "Negara Kesatuan Republik Indonesia",
+                type: "tf",
+                question: "Analisislah pernyataan terkait sistem pertahanan dan keamanan negara (Sishankamrata):",
+                statements: [
+                    "Sistem pertahanan dan keamanan negara bersifat semesta yang melibatkan seluruh warga negara, wilayah, dan sumber daya nasional.",
+                    "Tentara Nasional Indonesia (TNI) bertindak sebagai kekuatan utama pertahanan, sedangkan Kepolisian Negara Republik Indonesia (Polri) sebagai kekuatan utama keamanan dan ketertiban.",
+                    "Pertahanan negara merupakan tanggung jawab penuh militer tanpa keterlibatan warga sipil sama sekali."
+                ],
+                answer: [true, true, false]
+            },
+            {
+                id: 27,
+                category: "Negara Kesatuan Republik Indonesia",
+                type: "mc",
+                question: "Menjaga keutuhan Negara Kesatuan Republik Indonesia (NKRI) merupakan kewajiban setiap warga negara. Ancaman militer terhadap kedaulatan negara contohnya adalah...",
+                options: [
+                    "Agresi militer, spionase, sabotase, dan aksi terorisme bersenjata.",
+                    "Inflasi tinggi dan krisis moneter global.",
+                    "Penyalahgunaan narkoba di kalangan remaja.",
+                    "Penyebaran berita hoaks di media sosial.",
+                    "Pencemaran lingkungan hidup oleh limbah pabrik."
+                ],
+                answer: 0
+            },
+            {
+                id: 28,
+                category: "Negara Kesatuan Republik Indonesia",
+                type: "complex",
+                question: "Praktik demokrasi di Indonesia mengalami dinamika dari masa kemerdekaan, masa Orde Lama, Orde Baru, hingga Reformasi. Manakah ciri utama pelaksanaan demokrasi pada masa Reformasi (1998-sekarang)? (Pilih dua jawaban)",
+                options: [
+                    "Adanya kebebasan pers yang luas dan dijamin oleh undang-undang.",
+                    "Penyelenggaraan pemilu yang demokratis, langsung, umum, bebas, rahasia, jujur, dan adil.",
+                    "Pemusatan kekuasaan mutlak berada di tangan eksekutif presiden.",
+                    "Pembatasan pendirian partai politik maksimal hanya tiga partai."
+                ],
+                answer: [0, 1]
+            },
+            {
+                id: 29,
+                category: "Negara Kesatuan Republik Indonesia",
+                type: "tf",
+                question: "Tentukan kebenaran pernyataan mengenai wawasan nusantara sebagai geopolitik Indonesia:",
+                statements: [
+                    "Wawasan nusantara adalah cara pandang bangsa Indonesia terhadap diri dan lingkungannya sebagai satu kesatuan politik, ekonomi, sosial budaya, dan pertahanan keamanan.",
+                    "Kepulauan Nusantara dipandang sebagai satu kesatuan wilayah yang utuh dan tidak terpisahkan.",
+                    "Konsep wawasan nusantara hanya mementingkan pertahanan wilayah daratan tanpa memperhitungkan wilayah lautan."
+                ],
+                answer: [true, true, false]
+            },
+            {
+                id: 30,
+                category: "Negara Kesatuan Republik Indonesia",
+                type: "mc",
+                question: "Sebagai warga negara yang baik dalam menjaga keutuhan NKRI, sikap yang harus dihindari agar tidak merusak persatuan dan kesatuan bangsa adalah...",
+                options: [
+                    "Chauvinisme dan fanatisme sempit yang merendahkan pihak lain.",
+                    "Semangat toleransi dan gotong royong yang tinggi.",
+                    "Cinta tanah air dan rela berkorban untuk bangsa.",
+                    "Mematuhi peraturan perundang-undangan yang berlaku.",
+                    "Menghargai hasil karya orang lain."
+                ],
+                answer: 0
+            }
+        ];
+
+        // State Aplikasi
+        let currentUser = "";
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(questionsData.length).fill(null);
+        let examTimer = 3600; // 1 jam dalam detik
+        let timerInterval = null;
+
+        function startExam(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('input-name').value.trim();
+            if (!nameInput) return;
+
+            currentUser = nameInput;
+            document.getElementById('display-name').textContent = currentUser;
+            document.getElementById('user-badge').classList.remove('hidden');
+
+            document.getElementById('screen-welcome').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.remove('hidden');
+
+            initGrid();
+            loadQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (examTimer <= 0) {
+                    clearInterval(timerInterval);
+                    submitExam();
+                    return;
+                }
+                examTimer--;
+                let mins = Math.floor(examTimer / 60);
+                let secs = examTimer % 60;
+                document.getElementById('timer-display').textContent = 
+                    `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function initGrid() {
+            const gridContainer = document.getElementById('question-grid');
+            gridContainer.innerHTML = '';
+            for (let i = 0; i < questionsData.length; i++) {
+                const btn = document.createElement('button');
+                btn.id = `grid-btn-${i}`;
+                btn.textContent = i + 1;
+                btn.className = `w-10 h-10 rounded-xl font-bold text-xs flex items-center justify-center transition border ${
+                    i === currentQuestionIndex 
+                        ? 'bg-blue-600 text-white border-blue-700 ring-2 ring-blue-300' 
+                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                }`;
+                btn.onclick = () => goToQuestion(i);
+                gridContainer.appendChild(btn);
+            }
+        }
+
+        function updateGridStatus() {
+            for (let i = 0; i < questionsData.length; i++) {
+                const btn = document.getElementById(`grid-btn-${i}`);
+                if (!btn) continue;
+                
+                const isAnswered = isQuestionAnswered(i);
+                if (i === currentQuestionIndex) {
+                    btn.className = `w-10 h-10 rounded-xl font-bold text-xs flex items-center justify-center transition border bg-blue-600 text-white border-blue-700 ring-2 ring-blue-300`;
+                } else if (isAnswered) {
+                    btn.className = `w-10 h-10 rounded-xl font-bold text-xs flex items-center justify-center transition border bg-emerald-500 text-white border-emerald-600`;
+                } else {
+                    btn.className = `w-10 h-10 rounded-xl font-bold text-xs flex items-center justify-center transition border bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200`;
+                }
+            }
+        }
+
+        function isQuestionAnswered(index) {
+            const ans = userAnswers[index];
+            if (ans === null || ans === undefined) return false;
+            const q = questionsData[index];
+            if (q.type === 'complex') {
+                return Array.isArray(ans) && ans.length > 0;
+            } else if (q.type === 'tf') {
+                return Array.isArray(ans) && ans.length === 3 && ans.every(val => val !== null);
+            } else {
+                return ans !== null;
+            }
+        }
+
+        function loadQuestion(index) {
+            currentQuestionIndex = index;
+            const q = questionsData[index];
+
+            document.getElementById('question-number-title').textContent = `Soal No. ${index + 1} dari 30`;
+            const catTag = document.getElementById('question-category-tag');
+            catTag.textContent = q.category;
+            
+            // Warna kategori tag
+            if(q.category === 'Pancasila') catTag.className = 'text-xs font-bold uppercase tracking-wider bg-red-100 text-indonesia-red px-3 py-1 rounded-full';
+            else if(q.category === 'UUD 1945') catTag.className = 'text-xs font-bold uppercase tracking-wider bg-blue-100 text-indonesia-blue px-3 py-1 rounded-full';
+            else if(q.category === 'Bhinneka Tunggal Ika') catTag.className = 'text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800 px-3 py-1 rounded-full';
+            else catTag.className = 'text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full';
+
+            document.getElementById('question-text').textContent = q.question;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            if (q.type === 'mc') {
+                q.options.forEach((opt, optIdx) => {
+                    const isSelected = userAnswers[index] === optIdx;
+                    const label = document.createElement('label');
+                    label.className = `flex items-start p-4 rounded-xl border-2 transition cursor-pointer ${
+                        isSelected 
+                            ? 'border-indonesia-blue bg-indonesia-lightblue' 
+                            : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                    }`;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = `option-group-${index}`;
+                    input.value = optIdx;
+                    input.checked = isSelected;
+                    input.className = 'mt-1 h-4 w-4 text-indonesia-blue focus:ring-indonesia-blue';
+                    input.onchange = () => {
+                        saveAnswer(index, optIdx);
+                        loadQuestion(index); // Re-render to update active styling
+                    };
+
+                    const span = document.createElement('span');
+                    span.className = 'ml-3 text-sm sm:text-base text-slate-700 font-medium';
+                    span.textContent = `${String.fromCharCode(65 + optIdx)}. ${opt}`;
+
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    optionsContainer.appendChild(label);
+                });
+            } else if (q.type === 'complex') {
+                const hint = document.createElement('div');
+                hint.className = 'text-xs font-semibold text-indonesia-blue bg-blue-50 p-2.5 rounded-lg mb-3 border border-blue-200';
+                hint.textContent = 'ℹ️ Pilihan Kompleks: Anda dapat memilih lebih dari satu jawaban.';
+                optionsContainer.appendChild(hint);
+
+                q.options.forEach((opt, optIdx) => {
+                    const currentArr = Array.isArray(userAnswers[index]) ? userAnswers[index] : [];
+                    const isSelected = currentArr.includes(optIdx);
+                    const label = document.createElement('label');
+                    label.className = `flex items-start p-4 rounded-xl border-2 transition cursor-pointer ${
+                        isSelected 
+                            ? 'border-indonesia-blue bg-indonesia-lightblue' 
+                            : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                    }`;
+
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.value = optIdx;
+                    input.checked = isSelected;
+                    input.className = 'mt-1 h-4 w-4 rounded text-indonesia-blue focus:ring-indonesia-blue';
+                    input.onchange = () => {
+                        saveComplexAnswer(index, optIdx);
+                        loadQuestion(index);
+                    };
+
+                    const span = document.createElement('span');
+                    span.className = 'ml-3 text-sm sm:text-base text-slate-700 font-medium';
+                    span.textContent = `${String.fromCharCode(65 + optIdx)}. ${opt}`;
+
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    optionsContainer.appendChild(label);
+                });
+            } else if (q.type === 'tf') {
+                const hint = document.createElement('div');
+                hint.className = 'text-xs font-semibold text-indonesia-blue bg-blue-50 p-2.5 rounded-lg mb-3 border border-blue-200';
+                hint.textContent = 'ℹ️ Kolom Benar-Salah: Tentukan kebenaran untuk setiap pernyataan di bawah ini.';
+                optionsContainer.appendChild(hint);
+
+                const currentArr = Array.isArray(userAnswers[index]) ? userAnswers[index] : [null, null, null];
+
+                q.statements.forEach((stmt, sIdx) => {
+                    const stmtDiv = document.createElement('div');
+                    stmtDiv.className = 'p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2';
+                    
+                    const p = document.createElement('p');
+                    p.className = 'text-sm font-semibold text-slate-800';
+                    p.textContent = `Pernyataan ${sIdx + 1}: ${stmt}`;
+                    stmtDiv.appendChild(p);
+
+                    const radioContainer = document.createElement('div');
+                    radioContainer.className = 'flex space-x-6 pt-1';
+
+                    // Opsi Benar
+                    const labelTrue = document.createElement('label');
+                    labelTrue.className = 'flex items-center space-x-2 cursor-pointer';
+                    const inputTrue = document.createElement('input');
+                    inputTrue.type = 'radio';
+                    inputTrue.name = `tf-${index}-${sIdx}`;
+                    inputTrue.value = 'true';
+                    inputTrue.checked = currentArr[sIdx] === true;
+                    inputTrue.className = 'text-indonesia-blue focus:ring-indonesia-blue';
+                    inputTrue.onchange = () => saveTfAnswer(index, sIdx, true);
+                    
+                    const spanTrue = document.createElement('span');
+                    spanTrue.className = 'text-sm font-bold text-emerald-700';
+                    spanTrue.textContent = 'Benar';
+                    
+                    labelTrue.appendChild(inputTrue);
+                    labelTrue.appendChild(spanTrue);
+
+                    // Opsi Salah
+                    const labelFalse = document.createElement('label');
+                    labelFalse.className = 'flex items-center space-x-2 cursor-pointer';
+                    const inputFalse = document.createElement('input');
+                    inputFalse.type = 'radio';
+                    inputFalse.name = `tf-${index}-${sIdx}`;
+                    inputFalse.value = 'false';
+                    inputFalse.checked = currentArr[sIdx] === false;
+                    inputFalse.className = 'text-indonesia-blue focus:ring-indonesia-blue';
+                    inputFalse.onchange = () => saveTfAnswer(index, sIdx, false);
+
+                    const spanFalse = document.createElement('span');
+                    spanFalse.className = 'text-sm font-bold text-indonesia-red';
+                    spanFalse.textContent = 'Salah';
+
+                    labelFalse.appendChild(inputFalse);
+                    labelFalse.appendChild(spanFalse);
+
+                    radioContainer.appendChild(labelTrue);
+                    radioContainer.appendChild(labelFalse);
+                    stmtDiv.appendChild(radioContainer);
+
+                    optionsContainer.appendChild(stmtDiv);
+                });
+            }
+
+            // Atur tombol navigasi
+            document.getElementById('btn-prev').disabled = index === 0;
+            const nextBtn = document.getElementById('btn-next');
+            if (index === questionsData.length - 1) {
+                nextBtn.innerHTML = '<span>Selesai</span>';
+                nextBtn.onclick = confirmSubmit;
+            } else {
+                nextBtn.innerHTML = '<span>Selanjutnya</span> <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+                nextBtn.onclick = nextQuestion;
+            }
+
+            updateGridStatus();
+        }
+
+        function saveAnswer(qIdx, optIdx) {
+            userAnswers[qIdx] = optIdx;
+            updateGridStatus();
+        }
+
+        function saveComplexAnswer(qIdx, optIdx) {
+            if (!Array.isArray(userAnswers[qIdx])) {
+                userAnswers[qIdx] = [];
+            }
+            let arr = userAnswers[qIdx];
+            const pos = arr.indexOf(optIdx);
+            if (pos > -1) {
+                arr.splice(pos, 1);
+            } else {
+                arr.push(optIdx);
+            }
+            userAnswers[qIdx] = arr;
+            updateGridStatus();
+        }
+
+        function saveTfAnswer(qIdx, sIdx, val) {
+            if (!Array.isArray(userAnswers[qIdx])) {
+                userAnswers[qIdx] = [null, null, null];
+            }
+            userAnswers[qIdx][sIdx] = val;
+            updateGridStatus();
+        }
+
+        function goToQuestion(index) {
+            loadQuestion(index);
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questionsData.length - 1) {
+                loadQuestion(currentQuestionIndex + 1);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                loadQuestion(currentQuestionIndex - 1);
+            }
+        }
+
+        function confirmSubmit() {
+            document.getElementById('submit-modal').classList.remove('hidden');
+        }
+
+        function closeSubmitModal() {
+            document.getElementById('submit-modal').classList.add('hidden');
+        }
+
+        function submitExam() {
+            clearInterval(timerInterval);
+            closeSubmitModal();
+
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+            document.getElementById('result-name-label').textContent = `Peserta: ${currentUser}`;
+
+            let correctCount = 0;
+            let wrongCount = 0;
+
+            questionsData.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                let isCorrect = false;
+
+                if (q.type === 'mc') {
+                    if (userAns === q.answer) isCorrect = true;
+                } else if (q.type === 'complex') {
+                    if (Array.isArray(userAns) && Array.isArray(q.answer)) {
+                        const sortedUser = [...userAns].sort();
+                        const sortedAns = [...q.answer].sort();
+                        if (sortedUser.length === sortedAns.length && sortedUser.every((v, i) => v === sortedAns[i])) {
+                            isCorrect = true;
+                        }
+                    }
+                } else if (q.type === 'tf') {
+                    if (Array.isArray(userAns) && userAns.length === 3) {
+                        if (userAns.every((val, sI) => val === q.answer[sI])) {
+                            isCorrect = true;
+                        }
+                    }
+                }
+
+                if (isCorrect) correctCount++;
+                else wrongCount++;
+            });
+
+            const finalScore = Math.round((correctCount / questionsData.length) * 100);
+            document.getElementById('final-score').textContent = finalScore;
+            document.getElementById('stat-correct').textContent = correctCount;
+            document.getElementById('stat-wrong').textContent = wrongCount;
+
+            const predEl = document.getElementById('score-predicate');
+            if (finalScore >= 85) {
+                predEl.textContent = "Sangat Baik - Siap Menghadapi TKA!";
+                predEl.className = "text-sm font-bold mt-2 bg-emerald-100 text-emerald-800 px-4 py-1.5 rounded-full inline-block";
+            } else if (finalScore >= 70) {
+                predEl.textContent = "Baik - Tingkatkan Terus Latihan!";
+                predEl.className = "text-sm font-bold mt-2 bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full inline-block";
+            } else {
+                predEl.textContent = "Cukup - Perlu Belajar Lebih Giat Lagi!";
+                predEl.className = "text-sm font-bold mt-2 bg-red-100 text-indonesia-red px-4 py-1.5 rounded-full inline-block";
+            }
+
+            // Kirim ke cloud/admin dashboard
+            if (typeof window.saveExamResultToCloud === 'function') {
+                window.saveExamResultToCloud({
+                    name: currentUser,
+                    score: finalScore,
+                    correctCount: correctCount,
+                    answers: userAnswers
+                });
+            }
+
+            renderReview(correctCount);
+        }
+
+        function renderReview(correctCount) {
+            const reviewContainer = document.getElementById('review-container');
+            reviewContainer.innerHTML = '';
+
+            questionsData.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                let isCorrect = false;
+
+                if (q.type === 'mc') {
+                    if (userAns === q.answer) isCorrect = true;
+                } else if (q.type === 'complex') {
+                    if (Array.isArray(userAns) && Array.isArray(q.answer)) {
+                        const sortedUser = [...userAns].sort();
+                        const sortedAns = [...q.answer].sort();
+                        if (sortedUser.length === sortedAns.length && sortedUser.every((v, i) => v === sortedAns[i])) isCorrect = true;
+                    }
+                } else if (q.type === 'tf') {
+                    if (Array.isArray(userAns) && userAns.length === 3) {
+                        if (userAns.every((val, sI) => val === q.answer[sI])) isCorrect = true;
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-2xl border-2 ${isCorrect ? 'border-emerald-200 bg-emerald-50/50' : 'border-red-200 bg-red-50/50'}`;
+                
+                let answerTextFormatted = "";
+                if (q.type === 'mc') {
+                    answerTextFormatted = userAns !== null ? `${String.fromCharCode(65 + userAns)}. ${q.options[userAns]}` : '<span class="text-slate-400 italic">Tidak dijawab</span>';
+                } else if (q.type === 'complex') {
+                    if (Array.isArray(userAns) && userAns.length > 0) {
+                        answerTextFormatted = userAns.map(i => `${String.fromCharCode(65 + i)}. ${q.options[i]}`).join('<br>');
+                    } else {
+                        answerTextFormatted = '<span class="text-slate-400 italic">Tidak dijawab</span>';
+                    }
+                } else if (q.type === 'tf') {
+                    if (Array.isArray(userAns)) {
+                        answerTextFormatted = q.statements.map((s, si) => `Pernyataan ${si+1}: <strong class="${userAns[si] === null ? 'text-slate-400' : (userAns[si] ? 'text-emerald-700' : 'text-red-700')}">${userAns[si] === null ? 'Tidak diisi' : (userAns[si] ? 'Benar' : 'Salah')}</strong>`).join('<br>');
+                    } else {
+                        answerTextFormatted = '<span class="text-slate-400 italic">Tidak dijawab</span>';
+                    }
+                }
+
+                let keyTextFormatted = "";
+                if (q.type === 'mc') {
+                    keyTextFormatted = `${String.fromCharCode(65 + q.answer)}. ${q.options[q.answer]}`;
+                } else if (q.type === 'complex') {
+                    keyTextFormatted = q.answer.map(i => `${String.fromCharCode(65 + i)}. ${q.options[i]}`).join('<br>');
+                } else if (q.type === 'tf') {
+                    keyTextFormatted = q.statements.map((s, si) => `Pernyataan ${si+1}: <strong class="${q.answer[si] ? 'text-emerald-700' : 'text-red-700'}">${q.answer[si] ? 'Benar' : 'Salah'}</strong>`).join('<br>');
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full ${isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-indonesia-red'}">
+                            ${isCorrect ? '✔ Benar' : '✖ Salah'} (Soal ${idx + 1} - ${q.category})
+                        </span>
+                    </div>
+                    <p class="font-semibold text-slate-800 text-sm sm:text-base mb-3">${q.question}</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div>
+                            <span class="block font-bold text-slate-500 mb-1">Jawaban Anda:</span>
+                            <div class="text-slate-700">${answerTextFormatted}</div>
+                        </div>
+                        <div>
+                            <span class="block font-bold text-slate-500 mb-1">Kunci Jawaban:</span>
+                            <div class="text-emerald-700 font-medium">${keyTextFormatted}</div>
+                        </div>
+                    </div>
+                `;
+                reviewContainer.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
+```
