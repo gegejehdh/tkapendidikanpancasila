@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tryout Latihan Soal TKA PPKN</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        indonesia: {
+                            red: '#DC2626',
+                            white: '#FFFFFF',
+                            blue: '#1E40AF',
+                            darkblue: '#1E3A8A',
+                            lightred: '#FEF2F2',
+                            lightblue: '#EFF6FF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <header class="bg-gradient-to-r from-indonesia-red via-slate-900 to-indonesia-blue text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
+            <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+                <div class="bg-white text-indonesia-red font-extrabold px-3 py-1.5 rounded-lg shadow text-lg">ID</div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">TRYOUT TKA PPKN</h1>
+                    <p class="text-xs text-slate-200">Berdasarkan Kisi-Kisi Resmi TKA (Pancasila, UUD 1945, Bhinneka Tunggal Ika, NKRI)</p>
+                </div>
+            </div>
+            <div id="user-badge" class="hidden bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-medium border border-white/20 flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                </svg>
+                <span id="display-name" class="font-semibold text-white">Peserta</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 sm:p-6 my-4">
+        
+        <section id="screen-welcome" class="bg-white rounded-2xl shadow-xl p-6 sm:p-10 border-t-8 border-indonesia-red max-w-2xl mx-auto">
+            <div class="text-center mb-6">
+                <span class="bg-indonesia-lightblue text-indonesia-blue font-semibold text-xs px-3 py-1 rounded-full uppercase tracking-wider">Simulasi Ujian</span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">Latihan Soal TKA Pendidikan Pancasila & Kewarganegaraan</h2>
+                <p class="text-slate-600 mt-2 text-sm sm:text-base">Persiapkan dirimu dengan 30 soal berkualitas tinggi mencakup Pilihan Ganda, Pilihan Kompleks, dan Kolom Benar-Salah.</p>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-4 sm:p-6 mb-6 border border-slate-200 space-y-3">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indonesia-blue mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                    Ketentuan Ujian:
+                </h3>
+                <ul class="text-xs sm:text-sm text-slate-600 space-y-2 list-disc list-inside">
+                    <li><strong class="text-slate-700">Jumlah Soal:</strong> 30 Soal (Pilihan Ganda, Pilihan Kompleks, dan Benar-Salah).</li>
+                    <li><strong class="text-slate-700">Waktu Pengerjaan:</strong> 60 Menit (1 Jam). Otomatis submit saat waktu habis.</li>
+                    <li><strong class="text-slate-700">Navigasi:</strong> Anda dapat melompat ke nomor soal manapun dan mengubah jawaban sebelum dikumpulkan.</li>
+                    <li><strong class="text-slate-700">Penilaian:</strong> Nilai akhir langsung ditampilkan setelah ujian selesai beserta kunci jawaban & pembahasan.</li>
+                </ul>
+            </div>
+
+            <form id="form-login" onsubmit="startExam(event)" class="space-y-4">
+                <div>
+                    <label for="input-name" class="block text-sm font-semibold text-slate-700 mb-1">Masukkan Nama Lengkap Anda:</label>
+                    <input type="text" id="input-name" required placeholder="Contoh: Budi Santoso" 
+                        class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indonesia-blue focus:outline-none transition font-medium text-slate-800 bg-slate-50">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-indonesia-red to-indonesia-blue text-white font-bold py-3.5 px-6 rounded-xl shadow-lg hover:opacity-95 transition transform active:scale-[0.99] flex items-center justify-center space-x-2">
+                    <span>Mulai Ujian Sekarang</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </form>
+        </section>
+
+        <section id="screen-quiz" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <!-- Main Question Container (Left/Center 3 cols) -->
+            <div class="lg:col-span-3 bg-white rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col justify-between border-t-8 border-indonesia-blue">
+                <div>
+                    <!-- Top bar info inside question -->
+                    <div class="flex flex-wrap justify-between items-center mb-6 border-b pb-4 gap-2">
+                        <div>
+                            <span id="question-category-tag" class="text-xs font-bold uppercase tracking-wider bg-red-100 text-indonesia-red px-3 py-1 rounded-full">Pancasila</span>
+                            <h2 id="question-number-title" class="text-xl font-extrabold text-slate-800 mt-2">Soal No. 1</h2>
+                        </div>
+                        <div class="bg-indonesia-lightblue px-4 py-2 rounded-xl border border-blue-200 flex items-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indonesia-blue animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span id="timer-display" class="font-mono font-bold text-indonesia-blue text-lg">60:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Question Text -->
+                    <div id="question-text" class="text-slate-800 font-medium text-base sm:text-lg mb-6 leading-relaxed">
+                        Pertanyaan akan dimuat di sini...
+                    </div>
+
+                    <!-- Answer Options Box -->
+                    <div id="options-container" class="space-y-3 mb-8">
+                        <!-- Dynamically rendered options -->
+                    </div>
+                </div>
+
+                <!-- Navigation Bottom Buttons -->
+                <div class="flex justify-between items-center pt-4 border-t">
+                    <button onclick="prevQuestion()" id="btn-prev" class="px-5 py-2.5 rounded-xl border border-slate-300 font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center space-x-1 disabled:opacity-40 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        <span>Sebelumnya</span>
+                    </button>
+
+                    <button onclick="nextQuestion()" id="btn-next" class="px-6 py-2.5 rounded-xl bg-indonesia-blue text-white font-semibold shadow hover:bg-blue-800 transition flex items-center space-x-1">
+                        <span>Selanjutnya</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Grid (Right 1 col) -->
+            <div class="bg-white rounded-2xl shadow-xl p-5 border-t-8 border-indonesia-red flex flex-col justify-between h-fit">
+                <div>
+                    <h3 class="font-extrabold text-slate-800 text-base mb-1">Navigasi Soal</h3>
+                    <p class="text-xs text-slate-500 mb-4">Klik nomor untuk pindah soal.</p>
+                    
+                    <div id="question-grid" class="grid grid-cols-5 gap-2 mb-6 max-h-[300px] overflow-y-auto p-1">
+                        <!-- Dynamically generated navigation grid buttons -->
+                    </div>
+
+                    <div class="space-y-2 text-xs text-slate-600 border-t pt-4 mb-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-4 h-4 rounded bg-blue-600"></div>
+                            <span>Soal Sedang Dikerjakan</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-4 h-4 rounded bg-emerald-500"></div>
+                            <span>Sudah Dijawab</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-4 h-4 rounded bg-slate-200"></div>
+                            <span>Belum Dijawab</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="confirmSubmit()" class="w-full bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl shadow hover:bg-emerald-700 transition flex items-center justify-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Selesai & Kumpulkan</span>
+                </button>
+            </div>
+
+        </section>
+
+        <section id="screen-result" class="hidden bg-white rounded-2xl shadow-xl p-6 sm:p-10 border-t-8 border-indonesia-red max-w-4xl mx-auto">
+            <div class="text-center mb-8 border-b pb-6">
+                <div class="inline-block bg-indonesia-lightblue text-indonesia-blue font-bold px-4 py-1.5 rounded-full text-sm mb-3">Hasil Evaluasi Tryout TKA PPKN</div>
+                <h2 class="text-3xl font-extrabold text-slate-900">Ujian Telah Selesai!</h2>
+                <p id="result-name-label" class="text-slate-600 font-medium mt-1">Peserta: -</p>
+                
+                <div class="mt-6 inline-flex flex-col items-center justify-center bg-slate-50 border-2 border-slate-200 rounded-3xl px-8 py-6 shadow-inner">
+                    <span class="text-xs uppercase font-bold text-slate-400 tracking-wider">Nilai Akhir Anda</span>
+                    <span id="final-score" class="text-5xl sm:text-6xl font-black text-indonesia-red mt-1">0</span>
+                    <span id="score-predicate" class="text-sm font-bold mt-2 text-slate-700 bg-amber-100 text-amber-800 px-3 py-1 rounded-full">-</span>
+                </div>
+
+                <div class="mt-3">
+                    <span id="sync-status" class="text-xs font-medium text-slate-400">Menyimpan nilai ke database admin...</span>
+                </div>
+
+                <div class="
