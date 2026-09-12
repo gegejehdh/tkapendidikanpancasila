@@ -125,16 +125,17 @@
         <p>© 2026 Admin Panel Portal TKA PPKN Indonesia.</p>
     </footer>
 
-    <!-- Firebase Realtime Sync Script -->
+    <!-- Firebase & LocalStorage Hybrid Sync Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
 
         let app, db, auth;
+        const STORAGE_KEY = 'tka_ppkn_all_exam_results';
 
         window.onload = async function() {
             try {
@@ -152,37 +153,65 @@
                     
                     listenToExamResults();
                 } else {
-                    document.getElementById('participants-table-body').innerHTML = `
-                        <tr><td colspan="5" class="text-center py-8 text-red-500 font-semibold">Konfigurasi Firebase belum tersedia.</td></tr>
-                    `;
+                    loadFromLocalStorageOnly();
                 }
             } catch (err) {
-                console.error("Firebase admin init error:", err);
+                console.warn("Firebase admin init fallback:", err);
+                loadFromLocalStorageOnly();
             }
+
+            // Polling otomatis setiap 3 detik untuk mengecek data lokal terbaru
+            setInterval(() => {
+                loadFromLocalStorageOnly(true);
+            }, 3000);
+
+            // Listener storage lintas tab
+            window.addEventListener('storage', () => {
+                loadFromLocalStorageOnly(true);
+            });
         };
+
+        function loadFromLocalStorageOnly(silent = false) {
+            try {
+                const localData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                localData.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+                renderTable(localData);
+            } catch (e) {
+                console.error("Local storage read error:", e);
+            }
+        }
 
         function listenToExamResults() {
             try {
-                // Menghubungkan ke koleksi database publik yang persis sama dengan halaman siswa
                 const resultsRef = collection(db, 'artifacts', appId, 'public', 'data', 'exam_results');
                 
+                // Real-time listener dari Firestore + gabungkan dengan data lokal
                 onSnapshot(resultsRef, (snapshot) => {
-                    const participants = [];
+                    const cloudParticipants = [];
                     snapshot.forEach((doc) => {
-                        participants.push({ id: doc.id, ...doc.data() });
+                        cloudParticipants.push({ id: doc.id, ...doc.data() });
                     });
 
-                    participants.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+                    const localParticipants = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                    
+                    // Gabungkan dan hilangkan duplikat berdasarkan nama & timestamp terdekat
+                    const mergedMap = new Map();
+                    [...localParticipants, ...cloudParticipants].forEach(item => {
+                        const key = `${item.name}-${item.score}-${item.timestamp}`;
+                        mergedMap.set(key, item);
+                    });
 
-                    renderTable(participants);
+                    const combined = Array.from(mergedMap.values());
+                    combined.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+                    renderTable(combined);
                 }, (error) => {
-                    console.error("Snapshot error:", error);
-                    document.getElementById('participants-table-body').innerHTML = `
-                        <tr><td colspan="5" class="text-center py-8 text-red-500 font-semibold">Gagal memuat data dari database.</td></tr>
-                    `;
+                    console.warn("Snapshot fallback to local:", error);
+                    loadFromLocalStorageOnly();
                 });
             } catch (err) {
-                console.error("Error setting snapshot:", err);
+                console.warn("Error setting snapshot:", err);
+                loadFromLocalStorageOnly();
             }
         }
 
@@ -193,7 +222,7 @@
             document.getElementById('stat-total-participants').textContent = data.length;
 
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400 italic">Belum ada peserta yang mengumpulkan ujian.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400 italic">Belum ada peserta yang mengumpulkan ujian. Silakan coba selesaikan ujian di tab siswa.</td></tr>`;
                 document.getElementById('stat-avg-score').textContent = '0';
                 document.getElementById('stat-top-score').textContent = '0';
                 return;
@@ -234,7 +263,7 @@
         }
 
         window.loadParticipantsData = function() {
-            listenToExamResults();
+            loadFromLocalStorageOnly();
         }
     </script>
 
