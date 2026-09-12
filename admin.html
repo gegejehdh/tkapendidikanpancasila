@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -41,9 +42,14 @@
                     <p class="text-xs text-slate-200">Monitoring & Evaluasi Nilai Peserta Secara Real-Time</p>
                 </div>
             </div>
-            <div class="bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-medium border border-white/20 flex items-center space-x-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span class="text-white font-semibold">Live Database Terhubung</span>
+            <div class="flex items-center space-x-3">
+                <a href="tka_ppkn.html" class="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
+                    <span>← Ke Halaman Ujian Siswa</span>
+                </a>
+                <div class="bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-medium border border-white/20 flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-white font-semibold">Live Database</span>
+                </div>
             </div>
         </div>
     </header>
@@ -123,7 +129,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
@@ -157,16 +163,15 @@
 
         function listenToExamResults() {
             try {
+                // Menghubungkan ke koleksi database publik yang sama persis
                 const resultsRef = collection(db, 'artifacts', appId, 'public', 'data', 'exam_results');
                 
-                // Menerima data real-time menggunakan onSnapshot sesuai aturan (tanpa orderBy/where kompleks)
                 onSnapshot(resultsRef, (snapshot) => {
                     const participants = [];
                     snapshot.forEach((doc) => {
                         participants.push({ id: doc.id, ...doc.data() });
                     });
 
-                    // Urutkan di memori berdasarkan timestamp terbaru
                     participants.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
                     renderTable(participants);
@@ -229,10 +234,10 @@
         }
 
         window.loadParticipantsData = function() {
-            // Manual refresh trigger
             listenToExamResults();
         }
     </script>
 
 </body>
 </html>
+```
