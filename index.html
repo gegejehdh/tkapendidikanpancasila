@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -264,6 +265,9 @@
                         await signInAnonymously(auth);
                     }
                     window.isFirebaseReady = true;
+                    console.log("Firebase connected successfully for student portal.");
+                } else {
+                    console.warn("Firebase config is empty.");
                 }
             } catch (err) {
                 console.error("Firebase init error:", err);
@@ -272,30 +276,29 @@
 
         window.saveExamResultToCloud = async function(resultData) {
             if (!window.isFirebaseReady || !db) {
-                document.getElementById('sync-status').textContent = 'Mode offline (Nilai disimpan lokal).';
+                document.getElementById('sync-status').textContent = 'Mode lokal (Belum terhubung ke cloud).';
                 return;
             }
             try {
                 const resultsRef = collection(db, 'artifacts', appId, 'public', 'data', 'exam_results');
                 await addDoc(resultsRef, {
-                    ...resultData,
+                    name: resultData.name,
+                    score: resultData.score,
+                    correctCount: resultData.correctCount,
                     timestamp: new Date().toISOString()
                 });
                 document.getElementById('sync-status').textContent = '✔ Nilai berhasil dikirim ke Dashboard Admin!';
                 document.getElementById('sync-status').className = 'text-xs font-semibold text-emerald-600';
             } catch (err) {
-                console.error("Error saving result:", err);
-                document.getElementById('sync-status').textContent = 'Gagal sinkronisasi ke server.';
+                console.error("Error saving result to cloud:", err);
+                document.getElementById('sync-status').textContent = 'Gagal sinkronisasi ke server (Cek koneksi).';
             }
         };
     </script>
 
     <script>
         // Database 30 Soal TKA PPKN berdasarkan Kisi-Kisi:
-        // Materi: Pancasila (1-8), UUD 1945 (9-16), Bhinneka Tunggal Ika (17-23), NKRI (24-30)
-        // Format soal: 
-        // type: 'mc' (Pilihan Ganda biasa), 'complex' (Pilihan Ganda Kompleks - multiple answers), 'tf' (Benar Salah 3 pernyataan)
-        const questionsData = [
+        const rawQuestionsData = [
             // PANCASILA (1 - 8)
             {
                 id: 1,
@@ -304,12 +307,12 @@
                 question: "Sejarah perumusan Pancasila melalui proses sidang BPUPKI dan PPKI yang panjang. Tokoh yang pertama kali mengusulkan rumusan dasar negara pada Sidang Pertama BPUPKI tanggal 1 Juni 1945 adalah...",
                 options: [
                     "Mr. Moh. Yamin",
-                    "Prof. Dr. Mr. Soepomo",
                     "Ir. Soekarno",
+                    "Prof. Dr. Mr. Soepomo",
                     "Drs. Moh. Hatta",
                     "Ki Hadjar Dewantara"
                 ],
-                answer: 2 // C (Ir. Soekarno)
+                correctOption: "Ir. Soekarno"
             },
             {
                 id: 2,
@@ -322,7 +325,10 @@
                     "Bersumber dari nilai-nilai riil yang hidup dan berakar dalam kepribadian masyarakat Indonesia.",
                     "Menjadikan ideologi lain sebagai landasan utama pembangunan nasional."
                 ],
-                answer: [0, 2] // A dan C
+                correctAnswers: [
+                    "Memberikan orientasi ke depan dan membimbing bangsa dalam menghadapi tantangan zaman.",
+                    "Bersumber dari nilai-nilai riil yang hidup dan berakar dalam kepribadian masyarakat Indonesia."
+                ]
             },
             {
                 id: 3,
@@ -334,7 +340,7 @@
                     "Keputusan yang diambil harus dapat dipertanggungjawabkan secara moral kepada Tuhan Yang Maha Esa menjunjung tinggi harkat dan martabat manusia merupakan pengamalan sila ke-4.",
                     "Mengembangkan sikap adil terhadap sesama, menjaga keseimbangan antara hak dan kewajiban merupakan pengamalan sila ke-5."
                 ],
-                answer: [false, true, true] // Pernyataan 1 salah (sila ke-2 salah, harusnya sila ke-5/ke-2 kekeluargaan itu sila ke-2/5, tapi sila pertama keluarga? Kekeluargaan dan gotong royong sila ke-5 keadilan sosial / sila ke-3 persatuan. Sila ke-2 kemanusiaan adil beradab. Sederhananya: 1. Salah (kekeluargaan/gotong royong lebih dekat ke Sila ke-3 atau ke-5), 2. Benar (Sila ke-4), 3. Benar (Sila ke-5))
+                answer: [false, true, true]
             },
             {
                 id: 4,
@@ -342,13 +348,13 @@
                 type: "mc",
                 question: "Kasus pelanggaran Hak Asasi Manusia (HAM) berat di Indonesia ditangani khusus oleh lembaga penegak hukum tertentu berdasarkan Undang-Undang. Lembaga negara yang berwenang melakukan penyelidikan terhadap pelanggaran HAM berat adalah...",
                 options: [
-                    "Kepolisian Negara Republik Indonesia (POLRI)",
-                    "Komisi Nasional Hak Asasi Manusia (Komnas HAM)",
                     "Mahkamah Konstitusi (MK)",
                     "Kejaksaan Agung",
+                    "Komisi Nasional Hak Asasi Manusia (Komnas HAM)",
+                    "Kepolisian Negara Republik Indonesia (POLRI)",
                     "Komisi Pemberantasan Korupsi (KPK)"
                 ],
-                answer: 1 // Komnas HAM
+                correctOption: "Komisi Nasional Hak Asasi Manusia (Komnas HAM)"
             },
             {
                 id: 5,
@@ -356,12 +362,15 @@
                 type: "complex",
                 question: "Dalam pelaksanaan demokrasi Pancasila di Indonesia, terdapat nilai-nilai khas yang membedakannya dengan demokrasi liberal atau sosialis. Manakah karakteristik demokrasi Pancasila yang benar? (Pilih dua jawaban yang benar)",
                 options: [
-                    "Keputusan diambil berdasarkan musyawarah untuk mufakat.",
                     "Dominasi suara mayoritas mutlak mengalahkan perlindungan hak minoritas.",
-                    "Menghargai hak asasi manusia dengan tetap memperhatikan kewajiban dan tanggung jawab sosial.",
-                    "Pemerintahan dijalankan tanpa adanya pengawasan dari lembaga legislatif."
+                    "Keputusan diambil berdasarkan musyawarah untuk mufakat.",
+                    "Pemerintahan dijalankan tanpa adanya pengawasan dari lembaga legislatif.",
+                    "Menghargai hak asasi manusia dengan tetap memperhatikan kewajiban dan tanggung jawab sosial."
                 ],
-                answer: [0, 2]
+                correctAnswers: [
+                    "Keputusan diambil berdasarkan musyawarah untuk mufakat.",
+                    "Menghargai hak asasi manusia dengan tetap memperhatikan kewajiban dan tanggung jawab sosial."
+                ]
             },
             {
                 id: 6,
@@ -381,13 +390,13 @@
                 type: "mc",
                 question: "Identitas nasional bangsa Indonesia mencakup lambang negara Garuda Pancasila, bendera Merah Putih, lagu kebangsaan Indonesia Raya, dan bahasa persatuan bahasa Indonesia. Hal tersebut diatur secara resmi dalam UUD NRI Tahun 1945 pada pasal...",
                 options: [
-                    "Pasal 35 hingga Pasal 36B",
                     "Pasal 1 ayat (2) dan (3)",
                     "Pasal 27 ayat (1) dan (2)",
+                    "Pasal 35 hingga Pasal 36B",
                     "Pasal 30 ayat (1) dan (2)",
                     "Pasal 29 ayat (1) dan (2)"
                 ],
-                answer: 0 // Pasal 35 sampai 36B
+                correctOption: "Pasal 35 hingga Pasal 36B"
             },
             {
                 id: 8,
@@ -395,13 +404,13 @@
                 type: "mc",
                 question: "Pancasila sebagai ideologi terbuka mampu beradaptasi dengan perkembangan zaman tanpa kehilangan nilai dasarnya. Tiga tingkat nilai dalam Pancasila meliputi nilai dasar, nilai instrumental, dan nilai praksis. Contoh bentuk nilai instrumental Pancasila adalah...",
                 options: [
-                    "Nilai Ketuhanan yang terkandung dalam pembukaan UUD 1945",
                     "Undang-Undang, Peraturan Pemerintah, dan kebijakan publik",
+                    "Nilai Ketuhanan yang terkandung dalam pembukaan UUD 1945",
                     "Kebiasaan masyarakat gotong royong di desa",
                     "Sikap toleransi antarumat beragama di sekolah",
                     "Keyakinan mendasar bahwa tuhan itu ada"
                 ],
-                answer: 1 // UU, PP, kebijakan publik (bentuk instrumen penjabaran nilai dasar)
+                correctOption: "Undang-Undang, Peraturan Pemerintah, dan kebijakan publik"
             },
 
             // UUD NRI TAHUN 1945 (9 - 16)
@@ -411,13 +420,13 @@
                 type: "mc",
                 question: "Perilaku taat hukum merupakan cerminan warga negara yang baik. Menurut UUD NRI Tahun 1945 Pasal 27 ayat (1), segala warga negara bersamaan kedudukannya di dalam hukum dan pemerintahan dan wajib menjunjung hukum dan pemerintahan itu...",
                 options: [
-                    "Dengan syarat tertentu",
-                    "Dengan penuh kesadaran dan tanpa kecuali",
-                    "Jika diperintahkan oleh aparat penegak hukum",
                     "Demi kepentingan kelompok tertentu",
+                    "Dengan syarat tertentu",
+                    "Jika diperintahkan oleh aparat penegak hukum",
+                    "Dengan penuh kesadaran dan tanpa kecuali",
                     "Berdasarkan adat istiadat setempat"
                 ],
-                answer: 1
+                correctOption: "Dengan penuh kesadaran dan tanpa kecuali"
             },
             {
                 id: 10,
@@ -425,12 +434,15 @@
                 type: "complex",
                 question: "Kewenangan lembaga-lembaga negara diatur secara tegas dalam UUD NRI Tahun 1945 setelah amandemen. Manakah yang merupakan kewenangan Mahkamah Konstitusi (MK)? (Pilih dua jawaban)",
                 options: [
-                    "Menguji undang-undang terhadap Undang-Undang Dasar Negara Republik Indonesia Tahun 1945.",
-                    "Memutus sengketa kewenangan lembaga negara yang kewenangannya diberikan oleh UUD.",
                     "Memutus permohonan kasasi atas putusan pengadilan tingkat banding.",
-                    "Mengangkat dan memberhentikan para hakim agung di Mahkamah Agung."
+                    "Menguji undang-undang terhadap Undang-Undang Dasar Negara Republik Indonesia Tahun 1945.",
+                    "Mengangkat dan memberhentikan para hakim agung di Mahkamah Agung.",
+                    "Memutus sengketa kewenangan lembaga negara yang kewenangannya diberikan oleh UUD."
                 ],
-                answer: [0, 1]
+                correctAnswers: [
+                    "Menguji undang-undang terhadap Undang-Undang Dasar Negara Republik Indonesia Tahun 1945.",
+                    "Memutus sengketa kewenangan lembaga negara yang kewenangannya diberikan oleh UUD."
+                ]
             },
             {
                 id: 11,
@@ -450,13 +462,13 @@
                 type: "mc",
                 question: "Berdasarkan sejarah dan perkembangannya, UUD NRI Tahun 1945 telah mengalami beberapa kali amandemen oleh MPR antara tahun 1999 hingga 2002. Salah satu tujuan utama amandemen tersebut adalah...",
                 options: [
-                    "Memperkuat kekuasaan presiden secara mutlak",
                     "Membatasi kekuasaan presiden dan memperkuat sistem check and balances antarlembaga negara",
+                    "Memperkuat kekuasaan presiden secara mutlak",
                     "Menghapuskan Dewan Perwakilan Rakyat (DPR)",
                     "Mengubah dasar negara Pancasila menjadi konstitusi liberal",
                     "Mengembalikan UUD 1945 naskah asli tanpa perubahan"
                 ],
-                answer: 1
+                correctOption: "Membatasi kekuasaan presiden dan memperkuat sistem check and balances antarlembaga negara"
             },
             {
                 id: 13,
@@ -464,12 +476,15 @@
                 type: "complex",
                 question: "Hak dan kewajiban warga negara diatur dalam UUD NRI Tahun 1945. Manakah yang termasuk hak warga negara dalam bidang pendidikan dan kebudayaan? (Pilih dua jawaban)",
                 options: [
+                    "Setiap warga negara bebas membentuk partai politik radikal tanpa batas undang-undang.",
                     "Setiap warga negara wajib mengikuti pendidikan dasar dan pemerintah wajib membiayainya (Pasal 31 ayat 2).",
                     "Negara memajukan kebudayaan nasional Indonesia di tengah peradaban dunia (Pasal 32 ayat 1).",
-                    "Setiap warga negara bebas membentuk partai politik radikal tanpa batas undang-undang.",
                     "Pemerintah tidak memiliki kewajiban mencetak buku pelajaran gratis."
                 ],
-                answer: [0, 1]
+                correctAnswers: [
+                    "Setiap warga negara wajib mengikuti pendidikan dasar dan pemerintah wajib membiayainya (Pasal 31 ayat 2).",
+                    "Negara memajukan kebudayaan nasional Indonesia di tengah peradaban dunia (Pasal 32 ayat 1)."
+                ]
             },
             {
                 id: 14,
@@ -489,13 +504,13 @@
                 type: "mc",
                 question: "Sistem pemerintahan Indonesia menurut UUD NRI Tahun 1945 adalah sistem presidensial. Ciri utama dari sistem presidensial di Indonesia adalah...",
                 options: [
-                    "Presiden bertanggung jawab kepada DPR dan dapat dijatuhkan kapan saja oleh mosi tidak percaya.",
-                    "Presiden adalah kepala negara sekaligus kepala pemerintahan dan menteri-menteri diangkat serta bertanggung jawab kepada Presiden.",
                     "Parlemen memegang kekuasaan eksekutif tertinggi di kabinet.",
                     "Perdana menteri memimpin roda pemerintahan sehari-hari.",
+                    "Presiden bertanggung jawab kepada DPR dan dapat dijatuhkan kapan saja oleh mosi tidak percaya.",
+                    "Presiden adalah kepala negara sekaligus kepala pemerintahan dan menteri-menteri diangkat serta bertanggung jawab kepada Presiden.",
                     "Presiden tidak memiliki hak prerogatif dalam mengangkat menteri."
                 ],
-                answer: 1
+                correctOption: "Presiden adalah kepala negara sekaligus kepala pemerintahan dan menteri-menteri diangkat serta bertanggung jawab kepada Presiden."
             },
             {
                 id: 16,
@@ -503,13 +518,13 @@
                 type: "mc",
                 question: "Dalam UUD NRI Tahun 1945 Pasal 1 ayat (2), ditegaskan bahwa kedaulatan berada di tangan rakyat dan dilaksanakan menurut...",
                 options: [
-                    "Keputusan Mahkamah Agung",
-                    "Undang-Undang Dasar",
                     "Ketetapan MPR",
+                    "Undang-Undang Dasar",
+                    "Keputusan Mahkamah Agung",
                     "Keputusan Presiden",
                     "Kebijakan Menteri Dalam Negeri"
                 ],
-                answer: 1 // Undang-Undang Dasar
+                correctOption: "Undang-Undang Dasar"
             },
 
             // BHINNEKA TUNGGAL IKA (17 - 23)
@@ -520,12 +535,12 @@
                 question: "Semboyan 'Bhinneka Tunggal Ika' yang berarti berbeda-beda tetapi tetap satu jua berasal dari kitab Sutasoma yang dikarang oleh...",
                 options: [
                     "Mpu Prapanca",
-                    "Mpu Tantular",
                     "Mpu Gandring",
+                    "Mpu Tantular",
                     "Mpu Kanwa",
                     "Mpu Sedah"
                 ],
-                answer: 1 // Mpu Tantular
+                correctOption: "Mpu Tantular"
             },
             {
                 id: 18,
@@ -533,12 +548,15 @@
                 type: "complex",
                 question: "Gotong royong merupakan jiwa bangsa Indonesia yang memperkuat persatuan dalam keragaman. Manakah bentuk implementasi prinsip gotong royong yang positif di masyarakat modern? (Pilih dua jawaban)",
                 options: [
+                    "Melakukan kerja sama dalam kegiatan ujian sekolah agar semua nilai tuntas.",
                     "Melakukan kerja bakti membersihkan lingkungan tempat tinggal secara berkala.",
                     "Membantu korban bencana alam tanpa memandang latar belakang suku atau agama.",
-                    "Melakukan kerja sama dalam kegiatan ujian sekolah agar semua nilai tuntas.",
                     "Gotong royong dalam hal memprovokasi kelompok lain demi kepentingan golongan."
                 ],
-                answer: [0, 1]
+                correctAnswers: [
+                    "Melakukan kerja bakti membersihkan lingkungan tempat tinggal secara berkala.",
+                    "Membantu korban bencana alam tanpa memandang latar belakang suku atau agama."
+                ]
             },
             {
                 id: 19,
@@ -559,12 +577,12 @@
                 question: "Kebinekaan sosial budaya di Indonesia merupakan modal sosial yang sangat kuat untuk pembangunan nasional jika dikelola dengan baik. Bentuk modal sosial yang mengikat solidaritas antar-kelompok disebut...",
                 options: [
                     "Bonding social capital",
-                    "Bridging social capital",
                     "Individual capital",
+                    "Bridging social capital",
                     "Financial capital",
                     "Private capital"
                 ],
-                answer: 1 // Bridging (menghubungkan antar kelompok berbeda)
+                correctOption: "Bridging social capital"
             },
             {
                 id: 21,
@@ -572,12 +590,15 @@
                 type: "complex",
                 question: "Pancasila dan Bhinneka Tunggal Ika saling merajut persatuan bangsa. Sikap toleransi yang sehat dalam kehidupan beragama di Indonesia ditunjukkan dengan cara: (Pilih dua jawaban)",
                 options: [
-                    "Menghormati umat agama lain yang sedang melaksanakan ibadah sesuai ajaran agamanya.",
                     "Ikut serta secara aktif dalam ritual ibadah agama lain agar tercipta kerukunan total.",
-                    "Tidak memaksakan suatu agama atau keyakinan kepada orang lain.",
-                    "Melarang umat agama lain mendirikan tempat ibadah di wilayah manapun."
+                    "Menghormati umat agama lain yang sedang melaksanakan ibadah sesuai ajaran agamanya.",
+                    "Melarang umat agama lain mendirikan tempat ibadah di wilayah manapun.",
+                    "Tidak memaksakan suatu agama atau keyakinan kepada orang lain."
                 ],
-                answer: [0, 2]
+                correctAnswers: [
+                    "Menghormati umat agama lain yang sedang melaksanakan ibadah sesuai ajaran agamanya.",
+                    "Tidak memaksakan suatu agama atau keyakinan kepada orang lain."
+                ]
             },
             {
                 id: 22,
@@ -597,13 +618,13 @@
                 type: "mc",
                 question: "Dalam menghadapi ancaman disintegrasi bangsa yang bersumber dari perbedaan suku dan ras, langkah preventif paling efektif yang dapat dilakukan oleh generasi muda adalah...",
                 options: [
-                    "Mengembangkan sikap toleransi, empati sosial, dan semangat nasionalisme.",
                     "Memisahkan diri dalam kelompok pergaulan yang sejenis saja.",
+                    "Mengembangkan sikap toleransi, empati sosial, dan semangat nasionalisme.",
                     "Mengabaikan kebudayaan daerah lain karena dianggap tidak penting.",
                     "Menutup diri dari arus informasi global.",
                     "Menumbuhkan sikap superioritas atas kelompok lain."
                 ],
-                answer: 0
+                correctOption: "Mengembangkan sikap toleransi, empati sosial, dan semangat nasionalisme."
             },
 
             // NEGARA KESATUAN REPUBLIK INDONESIA / NKRI (24 - 30)
@@ -613,13 +634,13 @@
                 type: "mc",
                 question: "Bentuk negara Indonesia adalah negara kesatuan, dan bentuk pemerintahan adalah republik. Hal ini secara tegas dinyatakan dalam UUD NRI Tahun 1945 Pasal...",
                 options: [
-                    "Pasal 1 ayat (1)",
                     "Pasal 2 ayat (1)",
                     "Pasal 3 ayat (1)",
+                    "Pasal 1 ayat (1)",
                     "Pasal 4 ayat (1)",
                     "Pasal 5 ayat (1)"
                 ],
-                answer: 0 // Pasal 1 ayat (1)
+                correctOption: "Pasal 1 ayat (1)"
             },
             {
                 id: 25,
@@ -627,12 +648,15 @@
                 type: "complex",
                 question: "Peran Indonesia dalam perdamaian dunia diwujudkan secara aktif melalui politik luar negeri bebas aktif. Manakah bentuk nyata dari peranan tersebut? (Pilih dua jawaban)",
                 options: [
-                    "Pengiriman Pasukan Garuda sebagai bagian dari misi pemelihara perdamaian PBB.",
-                    "Menjadi tuan rumah Konferensi Asia-Afrika (KAA) tahun 1955 di Bandung.",
                     "Bergabung dalam pakta pertahanan militer global untuk menyerang negara tetangga.",
-                    "Menutup diri dari kerjasama ekonomi internasional dan lembaga PBB."
+                    "Menutup diri dari kerjasama ekonomi internasional dan lembaga PBB.",
+                    "Pengiriman Pasukan Garuda sebagai bagian dari misi pemelihara perdamaian PBB.",
+                    "Menjadi tuan rumah Konferensi Asia-Afrika (KAA) tahun 1955 di Bandung."
                 ],
-                answer: [0, 1]
+                correctAnswers: [
+                    "Pengiriman Pasukan Garuda sebagai bagian dari misi pemelihara perdamaian PBB.",
+                    "Menjadi tuan rumah Konferensi Asia-Afrika (KAA) tahun 1955 di Bandung."
+                ]
             },
             {
                 id: 26,
@@ -652,13 +676,13 @@
                 type: "mc",
                 question: "Menjaga keutuhan Negara Kesatuan Republik Indonesia (NKRI) merupakan kewajiban setiap warga negara. Ancaman militer terhadap kedaulatan negara contohnya adalah...",
                 options: [
-                    "Agresi militer, spionase, sabotase, dan aksi terorisme bersenjata.",
                     "Inflasi tinggi dan krisis moneter global.",
+                    "Agresi militer, spionase, sabotase, dan aksi terorisme bersenjata.",
                     "Penyalahgunaan narkoba di kalangan remaja.",
                     "Penyebaran berita hoaks di media sosial.",
                     "Pencemaran lingkungan hidup oleh limbah pabrik."
                 ],
-                answer: 0
+                correctOption: "Agresi militer, spionase, sabotase, dan aksi terorisme bersenjata."
             },
             {
                 id: 28,
@@ -666,12 +690,15 @@
                 type: "complex",
                 question: "Praktik demokrasi di Indonesia mengalami dinamika dari masa kemerdekaan, masa Orde Lama, Orde Baru, hingga Reformasi. Manakah ciri utama pelaksanaan demokrasi pada masa Reformasi (1998-sekarang)? (Pilih dua jawaban)",
                 options: [
-                    "Adanya kebebasan pers yang luas dan dijamin oleh undang-undang.",
-                    "Penyelenggaraan pemilu yang demokratis, langsung, umum, bebas, rahasia, jujur, dan adil.",
                     "Pemusatan kekuasaan mutlak berada di tangan eksekutif presiden.",
-                    "Pembatasan pendirian partai politik maksimal hanya tiga partai."
+                    "Pembatasan pendirian partai politik maksimal hanya tiga partai.",
+                    "Adanya kebebasan pers yang luas dan dijamin oleh undang-undang.",
+                    "Penyelenggaraan pemilu yang demokratis, langsung, umum, bebas, rahasia, jujur, dan adil."
                 ],
-                answer: [0, 1]
+                correctAnswers: [
+                    "Adanya kebebasan pers yang luas dan dijamin oleh undang-undang.",
+                    "Penyelenggaraan pemilu yang demokratis, langsung, umum, bebas, rahasia, jujur, dan adil."
+                ]
             },
             {
                 id: 29,
@@ -691,20 +718,58 @@
                 type: "mc",
                 question: "Sebagai warga negara yang baik dalam menjaga keutuhan NKRI, sikap yang harus dihindari agar tidak merusak persatuan dan kesatuan bangsa adalah...",
                 options: [
-                    "Chauvinisme dan fanatisme sempit yang merendahkan pihak lain.",
                     "Semangat toleransi dan gotong royong yang tinggi.",
                     "Cinta tanah air dan rela berkorban untuk bangsa.",
+                    "Chauvinisme dan fanatisme sempit yang merendahkan pihak lain.",
                     "Mematuhi peraturan perundang-undangan yang berlaku.",
                     "Menghargai hasil karya orang lain."
                 ],
-                answer: 0
+                correctOption: "Chauvinisme dan fanatisme sempit yang merendahkan pihak lain."
             }
         ];
+
+        let questionsData = [];
+
+        // Fungsi mengacak array pilihan jawaban secara acak per sesi/refresh
+        function prepareQuestions() {
+            questionsData = rawQuestionsData.map((q) => {
+                let copiedQ = { ...q };
+                if (copiedQ.type === 'mc') {
+                    // Simpan jawaban benar string asli
+                    let correctText = copiedQ.correctOption;
+                    // Acak array options
+                    let shuffledOpts = [...copiedQ.options];
+                    for (let i = shuffledOpts.length - 1; i > 0; i--) {
+                        let j = Math.floor(Math.random() * (i + 1));
+                        [shuffledOpts[i], shuffledOpts[j]] = [shuffledOpts[j], shuffledOpts[i]];
+                    }
+                    copiedQ.options = shuffledOpts;
+                    // Tentukan index numerik jawaban benar setelah diacak
+                    copiedQ.answer = shuffledOpts.indexOf(correctText);
+                } else if (copiedQ.type === 'complex') {
+                    let correctArrTexts = [...copiedQ.correctAnswers];
+                    let shuffledOpts = [...copiedQ.options];
+                    for (let i = shuffledOpts.length - 1; i > 0; i--) {
+                        let j = Math.floor(Math.random() * (i + 1));
+                        [shuffledOpts[i], shuffledOpts[j]] = [shuffledOpts[j], shuffledOpts[i]];
+                    }
+                    copiedQ.options = shuffledOpts;
+                    // Cari indeks baru dari jawaban-jawaban benar tersebut
+                    let newCorrectIndices = [];
+                    correctArrTexts.forEach(txt => {
+                        let idx = shuffledOpts.indexOf(txt);
+                        if (idx !== -1) newCorrectIndices.push(idx);
+                    });
+                    copiedQ.answer = newCorrectIndices;
+                }
+                return copiedQ;
+            });
+        }
 
         // State Aplikasi
         let currentUser = "";
         let currentQuestionIndex = 0;
-        let userAnswers = new Array(questionsData.length).fill(null);
+        let userAnswers = [];
         let examTimer = 3600; // 1 jam dalam detik
         let timerInterval = null;
 
@@ -716,6 +781,9 @@
             currentUser = nameInput;
             document.getElementById('display-name').textContent = currentUser;
             document.getElementById('user-badge').classList.remove('hidden');
+
+            prepareQuestions(); // Acak urutan opsi jawaban saat ujian dimulai
+            userAnswers = new Array(questionsData.length).fill(null);
 
             document.getElementById('screen-welcome').classList.add('hidden');
             document.getElementById('screen-quiz').classList.remove('hidden');
@@ -794,7 +862,6 @@
             const catTag = document.getElementById('question-category-tag');
             catTag.textContent = q.category;
             
-            // Warna kategori tag
             if(q.category === 'Pancasila') catTag.className = 'text-xs font-bold uppercase tracking-wider bg-red-100 text-indonesia-red px-3 py-1 rounded-full';
             else if(q.category === 'UUD 1945') catTag.className = 'text-xs font-bold uppercase tracking-wider bg-blue-100 text-indonesia-blue px-3 py-1 rounded-full';
             else if(q.category === 'Bhinneka Tunggal Ika') catTag.className = 'text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800 px-3 py-1 rounded-full';
@@ -823,7 +890,7 @@
                     input.className = 'mt-1 h-4 w-4 text-indonesia-blue focus:ring-indonesia-blue';
                     input.onchange = () => {
                         saveAnswer(index, optIdx);
-                        loadQuestion(index); // Re-render to update active styling
+                        loadQuestion(index);
                     };
 
                     const span = document.createElement('span');
@@ -888,7 +955,6 @@
                     const radioContainer = document.createElement('div');
                     radioContainer.className = 'flex space-x-6 pt-1';
 
-                    // Opsi Benar
                     const labelTrue = document.createElement('label');
                     labelTrue.className = 'flex items-center space-x-2 cursor-pointer';
                     const inputTrue = document.createElement('input');
@@ -906,7 +972,6 @@
                     labelTrue.appendChild(inputTrue);
                     labelTrue.appendChild(spanTrue);
 
-                    // Opsi Salah
                     const labelFalse = document.createElement('label');
                     labelFalse.className = 'flex items-center space-x-2 cursor-pointer';
                     const inputFalse = document.createElement('input');
@@ -932,7 +997,6 @@
                 });
             }
 
-            // Atur tombol navigasi
             document.getElementById('btn-prev').disabled = index === 0;
             const nextBtn = document.getElementById('btn-next');
             if (index === questionsData.length - 1) {
@@ -1052,7 +1116,6 @@
                 predEl.className = "text-sm font-bold mt-2 bg-red-100 text-indonesia-red px-4 py-1.5 rounded-full inline-block";
             }
 
-            // Kirim ke cloud/admin dashboard
             if (typeof window.saveExamResultToCloud === 'function') {
                 window.saveExamResultToCloud({
                     name: currentUser,
@@ -1062,10 +1125,10 @@
                 });
             }
 
-            renderReview(correctCount);
+            renderReview();
         }
 
-        function renderReview(correctCount) {
+        function renderReview() {
             const reviewContainer = document.getElementById('review-container');
             reviewContainer.innerHTML = '';
 
