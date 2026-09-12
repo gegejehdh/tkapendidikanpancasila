@@ -1,0 +1,240 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Tryout TKA PPKN</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        indonesia: {
+                            red: '#DC2626',
+                            white: '#FFFFFF',
+                            blue: '#1E40AF',
+                            darkblue: '#1E3A8A',
+                            lightred: '#FEF2F2',
+                            lightblue: '#EFF6FF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header Admin -->
+    <header class="bg-gradient-to-r from-indonesia-red via-slate-900 to-indonesia-blue text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
+            <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+                <div class="bg-white text-indonesia-red font-extrabold px-3 py-1.5 rounded-lg shadow text-lg">ADM</div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">DASHBOARD ADMIN TKA PPKN</h1>
+                    <p class="text-xs text-slate-200">Monitoring & Evaluasi Nilai Peserta Secara Real-Time</p>
+                </div>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-medium border border-white/20 flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-white font-semibold">Live Database Terhubung</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 sm:p-6 my-4 space-y-6">
+        
+        <!-- Statistik Ringkasan -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white rounded-2xl shadow-md p-5 border-l-8 border-indonesia-blue flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Peserta Selesai</p>
+                    <h3 id="stat-total-participants" class="text-3xl font-black text-slate-900 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 text-indonesia-blue rounded-xl flex items-center justify-center text-xl font-bold">👥</div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-md p-5 border-l-8 border-emerald-500 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Rata-Rata Nilai</p>
+                    <h3 id="stat-avg-score" class="text-3xl font-black text-slate-900 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl font-bold">📊</div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-md p-5 border-l-8 border-indonesia-red flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Nilai Tertinggi</p>
+                    <h3 id="stat-top-score" class="text-3xl font-black text-slate-900 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-red-50 text-indonesia-red rounded-xl flex items-center justify-center text-xl font-bold">🏆</div>
+            </div>
+        </div>
+
+        <!-- Tabel Data Peserta -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 border-t-8 border-indonesia-red">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900">Daftar Nilai Peserta Ujian TKA PPKN</h2>
+                    <p class="text-xs text-slate-500">Data masuk secara otomatis saat peserta menyelesaikan kuis.</p>
+                </div>
+                <button onclick="loadParticipantsData()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center space-x-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Perbarui Data</span>
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 uppercase text-xs tracking-wider border-b border-slate-200">
+                            <th class="p-3 font-bold rounded-l-xl">No</th>
+                            <th class="p-3 font-bold">Nama Peserta</th>
+                            <th class="p-3 font-bold">Waktu Pengerjaan</th>
+                            <th class="p-3 font-bold text-center">Jawaban Benar</th>
+                            <th class="p-3 font-bold text-center rounded-r-xl">Nilai Akhir</th>
+                        </tr>
+                    </thead>
+                    <tbody id="participants-table-body" class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                        <tr>
+                            <td colspan="5" class="text-center py-8 text-slate-400 italic">Memuat data dari database...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-6 text-center text-xs border-t border-slate-800">
+        <p>© 2026 Admin Panel Portal TKA PPKN Indonesia.</p>
+    </footer>
+
+    <!-- Firebase Realtime Sync Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+        let app, db, auth;
+
+        window.onload = async function() {
+            try {
+                if (Object.keys(firebaseConfig).length > 0) {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+
+                    const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    if (token) {
+                        await signInWithCustomToken(auth, token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    
+                    listenToExamResults();
+                } else {
+                    document.getElementById('participants-table-body').innerHTML = `
+                        <tr><td colspan="5" class="text-center py-8 text-red-500 font-semibold">Konfigurasi Firebase belum tersedia.</td></tr>
+                    `;
+                }
+            } catch (err) {
+                console.error("Firebase admin init error:", err);
+            }
+        };
+
+        function listenToExamResults() {
+            try {
+                const resultsRef = collection(db, 'artifacts', appId, 'public', 'data', 'exam_results');
+                
+                // Menerima data real-time menggunakan onSnapshot sesuai aturan (tanpa orderBy/where kompleks)
+                onSnapshot(resultsRef, (snapshot) => {
+                    const participants = [];
+                    snapshot.forEach((doc) => {
+                        participants.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    // Urutkan di memori berdasarkan timestamp terbaru
+                    participants.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+                    renderTable(participants);
+                }, (error) => {
+                    console.error("Snapshot error:", error);
+                    document.getElementById('participants-table-body').innerHTML = `
+                        <tr><td colspan="5" class="text-center py-8 text-red-500 font-semibold">Gagal memuat data dari database.</td></tr>
+                    `;
+                });
+            } catch (err) {
+                console.error("Error setting snapshot:", err);
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('participants-table-body');
+            tbody.innerHTML = '';
+
+            document.getElementById('stat-total-participants').textContent = data.length;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400 italic">Belum ada peserta yang mengumpulkan ujian.</td></tr>`;
+                document.getElementById('stat-avg-score').textContent = '0';
+                document.getElementById('stat-top-score').textContent = '0';
+                return;
+            }
+
+            let totalScore = 0;
+            let topScore = 0;
+
+            data.forEach((item, index) => {
+                totalScore += (item.score || 0);
+                if ((item.score || 0) > topScore) topScore = item.score;
+
+                const formattedDate = item.timestamp ? new Date(item.timestamp).toLocaleString('id-ID', {
+                    dateStyle: 'medium',
+                    timeStyle: 'medium'
+                }) : 'Waktu tidak tercatat';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-500">${index + 1}</td>
+                    <td class="p-3 font-bold text-slate-900">${item.name || 'Tanpa Nama'}</td>
+                    <td class="p-3 text-xs text-slate-500">${formattedDate}</td>
+                    <td class="p-3 text-center font-semibold text-emerald-600">${item.correctCount || 0} / 30</td>
+                    <td class="p-3 text-center">
+                        <span class="px-3 py-1 rounded-full text-xs font-extrabold ${
+                            item.score >= 85 ? 'bg-emerald-100 text-emerald-800' : 
+                            item.score >= 70 ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-indonesia-red'
+                        }">${item.score || 0}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const avg = Math.round(totalScore / data.length);
+            document.getElementById('stat-avg-score').textContent = avg;
+            document.getElementById('stat-top-score').textContent = topScore;
+        }
+
+        window.loadParticipantsData = function() {
+            // Manual refresh trigger
+            listenToExamResults();
+        }
+    </script>
+
+</body>
+</html>
+```
