@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -31,7 +31,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between">
 
-    <!-- Header Publik (Tanpa Tombol Admin) -->
+    <!-- Header Publik -->
     <header class="bg-gradient-to-r from-indonesia-red via-slate-900 to-indonesia-blue text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
             <div class="flex items-center space-x-3 mb-2 sm:mb-0">
@@ -71,7 +71,7 @@
                 </h3>
                 <ul class="text-xs sm:text-sm text-slate-600 space-y-2 list-disc list-inside">
                     <li><strong class="text-slate-700">Jumlah Soal:</strong> 30 Soal (Pilihan Ganda, Pilihan Kompleks, & Benar-Salah).</li>
-                    <li><strong class="text-slate-700">Waktu Pengerjaan:</strong> 60 Menit. Terhubung otomatis dengan sistem rekap admin.</li>
+                    <li><strong class="text-slate-700">Waktu Pengerjaan:</strong> Maksimal 60 Menit. Durasi pengerjaan Anda akan tercatat otomatis.</li>
                     <li><strong class="text-slate-700">Acak Soal & Opsi:</strong> Pilihan jawaban diacak otomatis demi objektivitas latihan.</li>
                 </ul>
             </div>
@@ -115,7 +115,7 @@
                     </div>
 
                     <div id="options-container" class="space-y-3 mb-8">
-                        <!-- Dynamically rendered options -->
+                        <!-- Opsi dinamis -->
                     </div>
                 </div>
 
@@ -143,7 +143,7 @@
                     <p class="text-xs text-slate-500 mb-4">Klik nomor untuk pindah soal.</p>
                     
                     <div id="question-grid" class="grid grid-cols-5 gap-2 mb-6 max-h-[300px] overflow-y-auto p-1">
-                        <!-- Navigation Grid Buttons -->
+                        <!-- Grid Navigasi -->
                     </div>
 
                     <div class="space-y-2 text-xs text-slate-600 border-t pt-4 mb-4">
@@ -178,6 +178,7 @@
                 <div class="inline-block bg-indonesia-lightblue text-indonesia-blue font-bold px-4 py-1.5 rounded-full text-sm mb-3">Hasil Evaluasi Tryout TKA PPKN</div>
                 <h2 class="text-3xl font-extrabold text-slate-900">Ujian Telah Selesai!</h2>
                 <p id="result-name-label" class="text-slate-600 font-medium mt-1">Peserta: -</p>
+                <p id="result-time-label" class="text-xs text-slate-500 font-semibold mt-1">Waktu Pengerjaan: -</p>
                 
                 <div class="mt-6 inline-flex flex-col items-center justify-center bg-slate-50 border-2 border-slate-200 rounded-3xl px-8 py-6 shadow-inner">
                     <span class="text-xs uppercase font-bold text-slate-400 tracking-wider">Nilai Akhir Anda</span>
@@ -209,7 +210,7 @@
             <div class="space-y-6">
                 <h3 class="text-xl font-bold text-slate-800">Pembahasan & Kunci Jawaban</h3>
                 <div id="review-container" class="space-y-6 max-h-[600px] overflow-y-auto pr-2">
-                    <!-- Review cards -->
+                    <!-- Kartu Review -->
                 </div>
             </div>
 
@@ -239,7 +240,7 @@
         <p>© 2026 Portal Latihan Soal TKA PPKN Indonesia. Dirancang sesuai kisi-kisi resmi.</p>
     </footer>
 
-    <!-- Firebase SDK & Multi-Storage Sync Script -->
+    <!-- Firebase & Storage Sync Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -272,13 +273,11 @@
         };
 
         window.saveExamResultToCloud = async function(resultData) {
-            // Simpan ke localStorage dengan kunci universal agar admin dapat membaca
             try {
                 const STORAGE_KEY = 'tka_ppkn_all_exam_results';
                 const localList = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
                 localList.push(resultData);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(localList));
-                // Trigger storage event manual untuk tab lain jika terbuka
                 window.dispatchEvent(new Event('storage'));
             } catch (e) {
                 console.error("Local sync error:", e);
@@ -294,6 +293,7 @@
                     name: resultData.name,
                     score: resultData.score,
                     correctCount: resultData.correctCount,
+                    durationFormatted: resultData.durationFormatted,
                     timestamp: resultData.timestamp
                 });
                 document.getElementById('sync-status').textContent = '✔ Nilai sukses terkirim ke Cloud & Admin!';
@@ -304,7 +304,7 @@
         };
     </script>
 
-    <!-- Quiz Core Script with Shuffling -->
+    <!-- Quiz Core Script with Shuffling & Duration Tracker -->
     <script>
         const rawQuestionsData = [
             // PANCASILA (1 - 8)
@@ -593,6 +593,12 @@
         ];
 
         let questionsData = [];
+        let currentUser = "";
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let examTimer = 3600; // total 60 menit dalam detik
+        let timeElapsed = 0;   // penghitung waktu pengerjaan
+        let timerInterval = null;
 
         function prepareQuestions() {
             questionsData = rawQuestionsData.map((q) => {
@@ -625,12 +631,6 @@
             });
         }
 
-        let currentUser = "";
-        let currentQuestionIndex = 0;
-        let userAnswers = [];
-        let examTimer = 3600;
-        let timerInterval = null;
-
         function startExam(e) {
             e.preventDefault();
             const nameInput = document.getElementById('input-name').value.trim();
@@ -652,7 +652,10 @@
         }
 
         function startTimer() {
+            examTimer = 3600;
+            timeElapsed = 0;
             timerInterval = setInterval(() => {
+                timeElapsed++;
                 if (examTimer <= 0) {
                     clearInterval(timerInterval);
                     submitExam();
@@ -928,6 +931,12 @@
             document.getElementById('screen-result').classList.remove('hidden');
             document.getElementById('result-name-label').textContent = `Peserta: ${currentUser}`;
 
+            // Hitung dan tampilkan durasi waktu pengerjaan
+            const elapsedMins = Math.floor(timeElapsed / 60);
+            const elapsedSecs = timeElapsed % 60;
+            const durationFormatted = `${elapsedMins} menit ${elapsedSecs} detik`;
+            document.getElementById('result-time-label').textContent = `Waktu Pengerjaan: ${durationFormatted}`;
+
             let correctCount = 0;
             let wrongCount = 0;
 
@@ -979,6 +988,7 @@
                     name: currentUser,
                     score: finalScore,
                     correctCount: correctCount,
+                    durationFormatted: durationFormatted,
                     timestamp: new Date().toISOString()
                 });
             }
@@ -1032,7 +1042,7 @@
                 if (q.type === 'mc') {
                     keyTextFormatted = `${String.fromCharCode(65 + q.answer)}. ${q.options[q.answer]}`;
                 } else if (q.type === 'complex') {
-                    keyTestFormatted = q.answer.map(i => `${String.fromCharCode(65 + i)}. ${q.options[i]}`).join('<br>');
+                    keyTextFormatted = q.answer.map(i => `${String.fromCharCode(65 + i)}. ${q.options[i]}`).join('<br>');
                 } else if (q.type === 'tf') {
                     keyTextFormatted = q.statements.map((s, si) => `Pernyataan ${si+1}: <strong class="${q.answer[si] ? 'text-emerald-700' : 'text-red-700'}">${q.answer[si] ? 'Benar' : 'Salah'}</strong>`).join('<br>');
                 }
